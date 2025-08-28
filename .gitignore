@@ -5,3 +5,18 @@
 .envrc
 __pycache__/
 node_modules/
+
+# Neovim runtime
+**/.local/
+**/plugged/
+**/site/
+**/swap/
+**/undo/
+**/backup/
+**/tree-sitter/
+
+# macOS
+.DS_Store
+
+# Otros
+*.log

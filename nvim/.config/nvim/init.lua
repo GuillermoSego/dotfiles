@@ -26,4 +26,3 @@ vim.opt.rtp:prepend(lazypath)
 vim.keymap.set("n", "<leader>ns", ":nohlsearch<CR>", { noremap = true, silent = true })
 
 require("config.lazy")
-

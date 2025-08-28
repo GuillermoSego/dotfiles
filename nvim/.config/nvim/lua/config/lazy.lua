@@ -14,7 +14,24 @@ vim.opt.rtp:prepend(lazypath)
 
 require("lazy").setup({
     -- Tema para hacer el código más legible y atractivo
-    { "morhetz/gruvbox" },
+    {
+      "catppuccin/nvim",
+      name = "catppuccin",
+      priority = 1000,
+      config = function()
+        require("catppuccin").setup({
+          integrations = {
+            nvimtree = true,
+            lualine = true,
+            treesitter = true,
+            cmp = true,
+            telescope = true,
+          },
+        })
+        vim.cmd.colorscheme("catppuccin-macchiato") -- Puedes usar latte, frappe, macchiato, mocha
+      end,
+    },
+
 
     -- Barra de estado
     {
@@ -24,7 +41,7 @@ require("lazy").setup({
             require("lualine").setup({
                 options = {
                     icons_enabled = true,
-                    theme = "gruvbox",
+                    theme = "catppuccin",
                 },
             })
         end,
@@ -190,18 +207,19 @@ require("lazy").setup({
     },
 
     {
-        "williamboman/mason-lspconfig.nvim",
-        dependencies = {
-            "neovim/nvim-lspconfig",
-            "williamboman/mason.nvim",
-        },
-        config = function()
-            require("mason-lspconfig").setup({
-                ensure_installed = { "pyright" }, 
-            })
-        end,
+      "williamboman/mason-lspconfig.nvim",
+      version = "1.29.1",
+      dependencies = {
+        "neovim/nvim-lspconfig",
+        "williamboman/mason.nvim",
+      },
+      config = function()
+        require("mason-lspconfig").setup({
+          ensure_installed = { "pyright" },
+          automatic_installation = true,
+        })
+      end,
     },
-
 
     -- Telescope
     {
@@ -244,7 +262,7 @@ require("lazy").setup({
 })
 
 -- Configuración del tema
-vim.cmd("colorscheme gruvbox")
+vim.cmd("colorscheme catppuccin")
 
 -- Configuración de nvim-cmp para autocompletado
 local cmp = require("cmp")
@@ -316,4 +334,3 @@ vim.keymap.set("n", "<leader>hs", "<cmd>Gitsigns stage_hunk<CR>", { noremap = tr
 vim.keymap.set("n", "<leader>hr", "<cmd>Gitsigns reset_hunk<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>hb", "<cmd>Gitsigns blame_line<CR>", { noremap = true, silent = true })
 vim.keymap.set("n", "<leader>hh", "<cmd>Gitsigns preview_hunk<CR>", { noremap = true, silent = true })
-
