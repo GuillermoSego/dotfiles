@@ -102,13 +102,14 @@ Si quieres quitar los symlinks (pero no borrar los archivos de tu repo):
 
 ## 📂 Estructura del repo
 
+```
 dotfiles/
 ├── nvim/.config/nvim/      → ~/.config/nvim/
 ├── tmux/.tmux.conf         → ~/.tmux.conf
 ├── zsh/.zshrc              → ~/.zshrc
-├── install.sh              # instalador (symlinks)
-└── uninstall.sh            # desinstalador
-
+├── install.sh              # instalador (symlinks + backups)
+└── uninstall.sh            # desinstalador (quita symlinks)
+```
 
 ## ✨ Notas
 
