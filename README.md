@@ -7,8 +7,6 @@ Incluye:
 - **Neovim** (configuración en `~/.config/nvim`)
 - **Tmux** (con soporte para TPM)
 
----
-
 ## 📦 Requisitos
 
 En una máquina nueva asegúrate de tener:
@@ -27,8 +25,6 @@ En macOS:
 ```bash
 brew install git zsh neovim tmux stow
 ```
-
-⸻
 
 ## 🚀 Instalación
 	
@@ -54,8 +50,6 @@ Este script:
 exec zsh
 ```
 
-⸻
-
 ## ⚡ Post-instalación
 
 ### Oh-My-Zsh
@@ -80,8 +74,6 @@ prefix + I    # (Ctrl+b seguido de Shift+i)
 
 para instalar los plugins definidos en ~/.tmux.conf.
 
-⸻
-
 ## 🛠️ Mantenimiento
 Para actualizar tus configs:
 ```bash
@@ -99,7 +91,6 @@ git add .
 git commit -m "update config"
 git push
 ```
-⸻
 
 ## 🔄 Desinstalar (opcional)
 
@@ -108,7 +99,6 @@ Si quieres quitar los symlinks (pero no borrar los archivos de tu repo):
 ```bash
 ./uninstall.sh
 ```
-⸻
 
 ## 📂 Estructura del repo
 
@@ -119,8 +109,6 @@ dotfiles/
 ├── install.sh              # instalador (symlinks)
 └── uninstall.sh            # desinstalador
 
-
-⸻
 
 ## ✨ Notas
 
