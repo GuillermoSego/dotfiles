@@ -36,12 +36,37 @@ require("lazy").setup({
     -- Barra de estado
     {
         "nvim-lualine/lualine.nvim",
-        dependencies = { "nvim-tree/nvim-web-devicons" },
+        dependencies = {
+            "nvim-tree/nvim-web-devicons",
+            "SmiteshP/nvim-navic", 
+        },
         config = function()
+            local navic = require("nvim-navic")
+
             require("lualine").setup({
                 options = {
                     icons_enabled = true,
                     theme = "catppuccin",
+                    component_separators = { left = "", right = "" },
+                    section_separators = { left = "", right = "" },
+                },
+                sections = {
+                    lualine_a = { "mode" },
+                    lualine_b = { "branch", "diff", "diagnostics" },
+                    lualine_c = {
+                        { "filename" },
+                        {
+                            function()
+                                return navic.get_location()
+                            end,
+                            cond = function()
+                                return navic.is_available()
+                            end,
+                        },
+                    },
+                    lualine_x = { "encoding", "fileformat", "filetype" },
+                    lualine_y = { "progress" },
+                    lualine_z = { "location" },
                 },
             })
         end,
@@ -131,19 +156,6 @@ require("lazy").setup({
     },
 
 
-    -- Mostrar la función que trabajamos
-    {
-      "nvim-treesitter/nvim-treesitter-context",
-      config = function()
-        require("treesitter-context").setup({
-          max_lines = 1,
-          multiline_threshold = 2,
-          trim_scope = "outer",
-        })
-      end,
-    },
-
-
     -- Errores
     {
     "folke/trouble.nvim",
@@ -152,9 +164,67 @@ require("lazy").setup({
     },
 
 
-
-    -- Syntax Highlighting
-    { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+    -- Syntax Highlighting, function jumps, ident blocks
+    {
+      "nvim-treesitter/nvim-treesitter",
+      build = ":TSUpdate",
+      event = { "BufReadPost", "BufNewFile" },
+      opts = {
+        ensure_installed = { "python", "lua", "bash", "json", "yaml", "markdown" },
+        highlight = { enable = true },
+      },
+      config = function(_, opts)
+        require("nvim-treesitter.configs").setup(opts)
+      end,
+    },
+    {
+      "nvim-treesitter/nvim-treesitter-textobjects",
+      dependencies = { "nvim-treesitter/nvim-treesitter" },
+      config = function()
+        require("nvim-treesitter.configs").setup({
+          textobjects = {
+            -- Selecciones (afuera/adentro de función, clase, bloque)
+            select = {
+              enable = true,
+              lookahead = true,
+              keymaps = {
+                ["af"] = "@function.outer",
+                ["if"] = "@function.inner",
+                ["ac"] = "@class.outer",
+                ["ic"] = "@class.inner",
+                ["ab"] = "@block.outer",   -- if/for/while/with/try/except/def/class, etc.
+                ["ib"] = "@block.inner",
+              },
+            },
+            -- Movimientos (inicio/fin de función, clase, bloque)
+            move = {
+              enable = true,
+              set_jumps = true,
+              goto_next_start = {
+                ["]m"] = "@function.outer",
+                ["]c"] = "@class.outer",
+                ["]b"] = "@block.outer",   -- << salto al siguiente bloque de indentación
+              },
+              goto_next_end = {
+                ["]M"] = "@function.outer",
+                ["]C"] = "@class.outer",
+                ["]B"] = "@block.outer",
+              },
+              goto_previous_start = {
+                ["[m"] = "@function.outer",
+                ["[c"] = "@class.outer",
+                ["[b"] = "@block.outer",   -- << bloque anterior
+              },
+              goto_previous_end = {
+                ["[M"] = "@function.outer",
+                ["[C"] = "@class.outer",
+                ["[B"] = "@block.outer",
+              },
+            },
+          },
+        })
+      end,
+    },
 
     -- Autocompletado
     {
@@ -188,24 +258,20 @@ require("lazy").setup({
       end,
     },
 
-
     -- LSP Configuración
     {
-        "neovim/nvim-lspconfig",
-        config = function()
-            require("config.lsp").setup()
-        end,
+      "neovim/nvim-lspconfig",
+      config = function()
+        require("config.lsp").setup()
+      end,
     },
 
     -- Mason
     {
-        "williamboman/mason.nvim",
-        build = ":MasonUpdate",
-        config = function()
-            require("mason").setup()
-        end,
+      "williamboman/mason.nvim",
+      build = ":MasonUpdate",
+      config = function() require("mason").setup() end,
     },
-
     {
       "williamboman/mason-lspconfig.nvim",
       version = "1.29.1",
@@ -217,10 +283,10 @@ require("lazy").setup({
         require("mason-lspconfig").setup({
           ensure_installed = { "pyright" },
           automatic_installation = true,
+          handlers = {},
         })
       end,
     },
-
     -- Telescope
     {
         "nvim-telescope/telescope.nvim",
@@ -261,35 +327,8 @@ require("lazy").setup({
 
 })
 
--- Configuración del tema
-vim.cmd("colorscheme catppuccin")
-
--- Configuración de nvim-cmp para autocompletado
-local cmp = require("cmp")
-cmp.setup({
-    snippet = {
-        expand = function(args)
-            require("luasnip").lsp_expand(args.body)
-        end,
-    },
-    mapping = cmp.mapping.preset.insert({
-        ["<Tab>"] = cmp.mapping.select_next_item(),
-        ["<S-Tab>"] = cmp.mapping.select_prev_item(),
-        ["<C-Space>"] = cmp.mapping.complete(),
-        ["<CR>"] = cmp.mapping.confirm({ select = true }),
-    }),
-    sources = cmp.config.sources({
-        { name = "nvim_lsp" },
-        { name = "luasnip" },
-    }),
-})
-
 -- Asignar una tecla para abrir el explorador de archivos
 vim.api.nvim_set_keymap("n", "<C-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
-
--- Configuración del LSP (servidores de lenguaje)
-local lspconfig = require("lspconfig")
-lspconfig.pyright.setup{}
 
 vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { noremap = true, silent = true })
 

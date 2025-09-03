@@ -23,6 +23,11 @@ M.on_attach = function(client, bufnr)
     -- Formateo de código
     buf_set_keymap("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
 
+    local navic_ok, navic = pcall(require, "nvim-navic")
+    if navic_ok and client.server_capabilities.documentSymbolProvider then
+        navic.attach(client, bufnr)
+    end
+
 end
 
 -- Configuración para servidores LSP

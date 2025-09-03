@@ -1,0 +1,12 @@
+#!/bin/sh
+# ~/bin/tmux-copy
+if command -v pbcopy >/dev/null 2>&1; then
+  exec pbcopy          # macOS (Terminal.app, iTerm2, etc.)
+elif command -v wl-copy >/dev/null 2>&1; then
+  exec wl-copy         # Wayland
+elif command -v xclip >/dev/null 2>&1; then
+  exec xclip -selection clipboard -in   # X11
+else
+  cat >/dev/null
+  tmux display-message "No clipboard tool found"
+fi
