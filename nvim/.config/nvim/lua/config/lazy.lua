@@ -155,6 +155,39 @@ require("lazy").setup({
         },
     },
 
+      -- Black (formatter) via none-ls
+      {
+        "nvimtools/none-ls.nvim",
+        event = { "BufReadPre", "BufNewFile" },
+        config = function()
+          local null_ls = require("null-ls")
+          null_ls.setup({
+            on_init = function(client, _)
+                client.offset_encoding = "utf-8"
+            end,
+            sources = {
+              null_ls.builtins.formatting.black.with({
+                command = "uvx", -- usa uvx black
+                args = { "black", "--stdin-filename", "$FILENAME", "-" },
+                filetypes = { "python" },
+              }),
+            },
+          })
+
+          -- formatea con black automáticamente al guardar .py
+          local aug = vim.api.nvim_create_augroup("FormatPythonWithBlack", { clear = true })
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            group = aug,
+            pattern = "*.py",
+            callback = function()
+              vim.lsp.buf.format({
+                filter = function(c) return c.name == "null-ls" end,
+                timeout_ms = 5000,
+              })
+            end,
+          })
+        end,
+      },
 
     -- Errores
     {
@@ -244,6 +277,11 @@ require("lazy").setup({
               luasnip.lsp_expand(args.body)
             end,
           },
+          performance = {
+            debounce = 60,          -- ms entre tecleo y nueva petición
+            throttle = 30,
+            fetching_timeout = 100, -- corta backends lentos
+          },
           mapping = cmp.mapping.preset.insert({
             ["<Tab>"] = cmp.mapping.select_next_item(),
             ["<S-Tab>"] = cmp.mapping.select_prev_item(),
@@ -291,6 +329,23 @@ require("lazy").setup({
     {
         "nvim-telescope/telescope.nvim",
         dependencies = { "nvim-lua/plenary.nvim" },
+        config = function()
+            require("telescope").setup({
+              pickers = {
+                buffers = {
+                  sort_lastused = true,
+                  mappings = {
+                    i = {
+                      ["<c-d>"] = "delete_buffer", -- en modo insert
+                    },
+                    n = {
+                      ["d"] = "delete_buffer",     -- en modo normal
+                    },
+                  },
+                },
+              },
+            })
+        end
     },
 
     -- Autocompletado paréntesis/comillas ...
@@ -316,13 +371,6 @@ require("lazy").setup({
       end
     },
 
-    -- Copilot
-    {
-        "github/copilot.vim",
-        lazy = false,  -- Cargar al inicio (opcional)
-    }
-
-    
 
 
 })
@@ -330,7 +378,9 @@ require("lazy").setup({
 -- Asignar una tecla para abrir el explorador de archivos
 vim.api.nvim_set_keymap("n", "<C-n>", ":NvimTreeToggle<CR>", { noremap = true, silent = true })
 
-vim.keymap.set("n", "<leader>e", vim.diagnostic.open_float, { noremap = true, silent = true })
+vim.keymap.set("n", "<leader>f", function()
+  vim.lsp.buf.format({ async = true })
+end, { noremap = true, silent = true })
 
 -- Gitsigns config extendida
 require("gitsigns").setup({

@@ -20,9 +20,6 @@ M.on_attach = function(client, bufnr)
     buf_set_keymap("n", "<leader>e", "<cmd>lua vim.diagnostic.open_float()<CR>", opts) -- Mostrar diagnóstico flotante
     buf_set_keymap("n", "<leader>q", "<cmd>lua vim.diagnostic.setloclist()<CR>", opts) -- Lista de diagnósticos
 
-    -- Formateo de código
-    buf_set_keymap("n", "<leader>f", "<cmd>lua vim.lsp.buf.format({ async = true })<CR>", opts)
-
     local navic_ok, navic = pcall(require, "nvim-navic")
     if navic_ok and client.server_capabilities.documentSymbolProvider then
         navic.attach(client, bufnr)
@@ -30,17 +27,41 @@ M.on_attach = function(client, bufnr)
 
 end
 
+
 -- Configuración para servidores LSP
 M.setup = function()
     local lspconfig = require("lspconfig")
     local capabilities = require("cmp_nvim_lsp").default_capabilities()
 
-    -- Configurar el servidor Pyright para Python
+    capabilities.offsetEncoding = { "utf-8" }                -- legado
+    capabilities.general = capabilities.general or {}
+    capabilities.general.positionEncodings = { "utf-8" }     -- LSP 3.17
+
+    -- Pyright: análisis de tipos
     lspconfig.pyright.setup({
+        settings = {
+            python = {
+                analysis = {
+                    diagnosticMode = "openFilesOnly",
+                    useLibraryCodeForTypes = false,  -- menos análisis de libs externas
+                    typeCheckingMode = "basic",      -- o "off" para máximo rendimiento
+                },
+            },
+        },
         capabilities = capabilities,
         on_attach = M.on_attach,
     })
 
+    -- Ruff: linting (diagnósticos y autofix)
+    lspconfig.ruff.setup({
+        init_options = {
+            settings = {
+                args = {}, -- por ejemplo { "--line-length=88" }
+            },
+        },
+        capabilities = capabilities,
+        on_attach = M.on_attach,
+    })
 end
 
 return M
