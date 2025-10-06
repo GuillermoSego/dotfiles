@@ -30,38 +30,41 @@ end
 
 -- Configuración para servidores LSP
 M.setup = function()
-    local lspconfig = require("lspconfig")
-    local capabilities = require("cmp_nvim_lsp").default_capabilities()
+  -- Capabilities de cmp-nvim-lsp
+  local capabilities = require("cmp_nvim_lsp").default_capabilities()
+  capabilities.offsetEncoding = { "utf-8" }
+  capabilities.general = capabilities.general or {}
+  capabilities.general.positionEncodings = { "utf-8" }
 
-    capabilities.offsetEncoding = { "utf-8" }                -- legado
-    capabilities.general = capabilities.general or {}
-    capabilities.general.positionEncodings = { "utf-8" }     -- LSP 3.17
+  local on_attach = M.on_attach
 
-    -- Pyright: análisis de tipos
-    lspconfig.pyright.setup({
-        settings = {
-            python = {
-                analysis = {
-                    diagnosticMode = "openFilesOnly",
-                    useLibraryCodeForTypes = false,  -- menos análisis de libs externas
-                    typeCheckingMode = "basic",      -- o "off" para máximo rendimiento
-                },
-            },
+  -- 1) Definir configs (SIN .setup)
+  vim.lsp.config["pyright"] = {
+    settings = {
+      python = {
+        analysis = {
+          diagnosticMode = "openFilesOnly",
+          useLibraryCodeForTypes = false,
+          typeCheckingMode = "basic",
         },
-        capabilities = capabilities,
-        on_attach = M.on_attach,
-    })
+      },
+    },
+    capabilities = capabilities,
+    on_attach = on_attach,
+  }
 
-    -- Ruff: linting (diagnósticos y autofix)
-    lspconfig.ruff.setup({
-        init_options = {
-            settings = {
-                args = {}, -- por ejemplo { "--line-length=88" }
-            },
-        },
-        capabilities = capabilities,
-        on_attach = M.on_attach,
-    })
+  vim.lsp.config["ruff"] = {
+    init_options = {
+      settings = {
+        args = {}, -- p.ej. { "--line-length=88" }
+      },
+    },
+    capabilities = capabilities,
+    on_attach = on_attach,
+  }
+
+  -- 2) Habilitar los servers
+  vim.lsp.enable({ "pyright", "ruff" })
 end
 
 return M
