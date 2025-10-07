@@ -44,8 +44,8 @@ M.setup = function()
       python = {
         analysis = {
           diagnosticMode = "openFilesOnly",
-          useLibraryCodeForTypes = false,
-          typeCheckingMode = "basic",
+          useLibraryCodeForTypes = true,
+          typeCheckingMode = "strict",
         },
       },
     },
