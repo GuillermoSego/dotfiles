@@ -119,6 +119,26 @@ require("lazy").setup({
         end,
     },
 
+    {
+        "mg979/vim-visual-multi",
+        branch = "master",
+        init = function()
+          vim.g.VM_default_mappings = 0
+          vim.g.VM_maps = {
+            ["Find Under"]        = "<leader>mc",   -- seleccionar palabra bajo el cursor y añadir siguiente
+            ["Find Subword Under"]= "<leader>mc",
+            ["Select All"]        = "<leader>ma",   -- seleccionar todas las ocurrencias
+            ["Add Cursor Down"]   = "<C-j>",   -- añade cursor abajo
+            ["Add Cursor Up"]     = "<C-k>",   -- añade cursor arriba
+            ["Skip Region"]       = "<C-x>",   -- saltar la ocurrencia actual
+            ["Remove Region"]     = "<C-p>",   -- quitar la ocurrencia actual
+            ["Exit"]              = "<Esc>",   -- salir del modo multi
+          }
+          -- Opcional: que resalte las coincidencias
+          vim.g.VM_highlight_matches = "underline"
+        end,
+    },
+
     -- Soporte de íconos
     {
         "nvim-tree/nvim-web-devicons",
@@ -139,6 +159,36 @@ require("lazy").setup({
       }
     },
     
+    -- LSP Configuración
+    {
+      "neovim/nvim-lspconfig",
+      config = function()
+        require("config.lsp").setup()
+      end,
+    },
+
+    -- Mason
+    {
+      "williamboman/mason.nvim",
+      build = ":MasonUpdate",
+      config = function() require("mason").setup() end,
+    },
+    {
+      "williamboman/mason-lspconfig.nvim",
+      version = "1.29.1",
+      dependencies = {
+        "neovim/nvim-lspconfig",
+        "williamboman/mason.nvim",
+      },
+      config = function()
+        require("mason-lspconfig").setup({
+          ensure_installed = { "pyright" },
+          automatic_installation = true,
+          handlers = {},
+        })
+      end,
+    },
+
     -- Identación o formato automático
     {
         "stevearc/conform.nvim",
@@ -296,35 +346,6 @@ require("lazy").setup({
       end,
     },
 
-    -- LSP Configuración
-    {
-      "neovim/nvim-lspconfig",
-      config = function()
-        require("config.lsp").setup()
-      end,
-    },
-
-    -- Mason
-    {
-      "williamboman/mason.nvim",
-      build = ":MasonUpdate",
-      config = function() require("mason").setup() end,
-    },
-    {
-      "williamboman/mason-lspconfig.nvim",
-      version = "1.29.1",
-      dependencies = {
-        "neovim/nvim-lspconfig",
-        "williamboman/mason.nvim",
-      },
-      config = function()
-        require("mason-lspconfig").setup({
-          ensure_installed = { "pyright" },
-          automatic_installation = true,
-          handlers = {},
-        })
-      end,
-    },
     -- Telescope
     {
         "nvim-telescope/telescope.nvim",

@@ -46,6 +46,7 @@ M.setup = function()
           diagnosticMode = "openFilesOnly",
           useLibraryCodeForTypes = true,
           typeCheckingMode = "strict",
+          reportMissingTypeStubs = false,
         },
       },
     },
