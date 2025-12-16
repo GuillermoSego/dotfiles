@@ -106,6 +106,7 @@ require("lazy").setup({
                 },
                 filters = {
                     dotfiles = false,
+                    git_ignored = false,
                 },
             })
         end,
@@ -201,6 +202,44 @@ require("lazy").setup({
                 python = { "black" },
                 lua = { "stylua" },
                 javascript = { "prettier" },
+                -- 👇 aquí añadimos JSON
+                json = { "jq_min" },
+            },
+            -- definimos el formatter jq_min
+            formatters = {
+                jq_min = {
+                    command = "jq",
+                    args = { "-c", "." }, -- -c = compact (minify)
+                    stdin = true,
+                },
+            },
+        },
+
+        -- keymaps para usar conform cómodamente
+        keys = {
+            {
+                "<leader>jf",
+                function()
+                    require("conform").format({
+                        async = false,
+                        lsp_fallback = true,
+                    })
+                end,
+                mode = { "n", "v" },
+                desc = "Formatear buffer con Conform",
+            },
+            {
+                "<leader>jm",
+                function()
+                    -- fuerza usar jq_min (minificar JSON)
+                    require("conform").format({
+                        async = false,
+                        lsp_fallback = false,
+                        formatters = { "jq_min" },
+                    })
+                end,
+                mode = { "n", "v" },
+                desc = "Minificar JSON con jq",
             },
         },
     },
