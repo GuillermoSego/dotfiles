@@ -1,120 +1,122 @@
-# Dotfiles 🛠️
+# Dotfiles
 
-Mi entorno personal de trabajo para **Mac, Linux y WSL**, listo para instalar en cualquier máquina con un solo comando.
+Personal dev environment for **WSL/Ubuntu** and **macOS**, ready to install on a fresh machine with a single command.
 
-Incluye:
-- **Zsh** (con soporte para Oh-My-Zsh)
-- **Neovim** (configuración en `~/.config/nvim`)
-- **Tmux** (con soporte para TPM)
+Includes:
+- **Neovim** — LSP, Treesitter, Telescope, nvim-dap, lazy.nvim (~47 plugins)
+- **Tmux** — Catppuccin Mocha theme, vim-tmux-navigator, TPM plugins
+- **Zsh** — Oh-My-Zsh + Powerlevel10k + autosuggestions + syntax highlighting
 
-## 📦 Requisitos
+## Install from zero
 
-En una máquina nueva asegúrate de tener:
-
-- **zsh**
-- **neovim**
-- **tmux**
-
-Instálalos con tu gestor de paquetes:
+Clone the repo and run the bootstrap script:
 
 ```bash
-sudo apt update
-sudo apt install -y git zsh neovim tmux
-```
-En macOS:
-```bash
-brew install git zsh neovim tmux stow
-```
-
-## 🚀 Instalación
-	
-1.	Clona el repositorio en tu home:
-
-```bash
-git clone https://github.com/TU-USUARIO/dotfiles.git ~/dotfiles
+git clone https://github.com/GuillermoSego/dotfiles.git ~/dotfiles
 cd ~/dotfiles
+./bootstrap.sh
 ```
-2.	Da permisos al instalador y ejecútalo:
+
+This single script installs **everything** from scratch (idempotent, safe to re-run):
+
+| Phase | What it installs |
+|-------|-----------------|
+| 1 | System packages (apt: zsh, tmux, fzf, ripgrep, fd, jq, python3, etc.) |
+| 2 | Neovim latest stable (AppImage) |
+| 3 | Oh-My-Zsh + Powerlevel10k + zsh plugins |
+| 4 | TPM (Tmux Plugin Manager) |
+| 5 | NVM + Node.js LTS + prettier |
+| 6 | Python tools (black, debugpy) |
+| 7 | Rust + stylua |
+| 8 | lazygit |
+| 9 | Symlinks via `install.sh` |
+| 10 | Sets zsh as default shell |
+| 11 | Headless plugin installs (TPM, lazy.nvim, Mason, Treesitter) |
+
+> **macOS**: Switch to the `main` branch — its `bootstrap.sh` uses Homebrew instead of apt.
+
+## Symlinks only
+
+If dependencies are already installed and you just need the symlinks:
 
 ```bash
-chmod +x install.sh
 ./install.sh
 ```
-Este script:
-	•	Crea symlinks desde tu $HOME hacia los archivos de este repo.
-	•	Hace backup de archivos existentes en ~/.dotfiles_backup/AAAAMMDD-HHMMSS.
 
-3.	Reinicia la shell:
+This creates symlinks from `$HOME` to the repo files and backs up any existing configs to `~/.dotfiles_backup/YYYYMMDD-HHMMSS/`.
 
-```bash
-exec zsh
-```
+## Update configs
 
-## ⚡ Post-instalación
-
-### Oh-My-Zsh
-
-Si aún no tienes instalado Oh-My-Zsh, ejecútalo (una sola vez):
-
-```bash
-git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh
-```
-
-Tu .zshrc ya está en este repo, así que cargará automáticamente la configuración.
-
-### Tmux plugins
-
-Instala TPM (Tmux Plugin Manager):
-```bash
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
-```
-Después abre tmux y presiona:
-
-prefix + I    # (Ctrl+b seguido de Shift+i)
-
-para instalar los plugins definidos en ~/.tmux.conf.
-
-## 🛠️ Mantenimiento
-Para actualizar tus configs:
 ```bash
 cd ~/dotfiles
 git pull
-./install.sh   # vuelve a aplicar symlinks si es necesario
+./install.sh   # re-applies symlinks if needed
 ```
 
-Para editar y guardar cambios en cualquier dotfile:
-Edita normalmente (nvim ~/.zshrc, nvim ~/.config/nvim/init.lua, etc.)
-Luego guarda en git:
+To save your changes:
+
 ```bash
 cd ~/dotfiles
 git add .
-git commit -m "update config"
+git commit -m "[feat] description"
 git push
 ```
 
-## 🔄 Desinstalar (opcional)
+## Uninstall
 
-Si quieres quitar los symlinks (pero no borrar los archivos de tu repo):
+Remove symlinks (keeps repo files intact):
 
 ```bash
 ./uninstall.sh
 ```
 
-## 📂 Estructura del repo
+## Repo structure
 
 ```
 dotfiles/
-├── nvim/.config/nvim/      → ~/.config/nvim/
-├── tmux/.tmux.conf         → ~/.tmux.conf
-├── zsh/.zshrc              → ~/.zshrc
-├── install.sh              # instalador (symlinks + backups)
-└── uninstall.sh            # desinstalador (quita symlinks)
+├── nvim/.config/nvim/      -> ~/.config/nvim/
+│   ├── init.lua             # entry point, options, leader key
+│   └── lua/config/
+│       ├── lazy.lua         # all plugin specs + keymaps
+│       └── lsp.lua          # LSP servers (pyright, ruff)
+├── tmux/.tmux.conf          -> ~/.tmux.conf
+├── tmux/tmux-copy           -> ~/bin/tmux-copy
+├── zsh/.zshrc               -> ~/.zshrc
+├── bootstrap.sh             # full environment setup from zero
+├── install.sh               # symlinks + backups
+├── uninstall.sh             # remove symlinks
+└── CLAUDE.md                # AI assistant instructions
 ```
 
-## ✨ Notas
+## Key bindings reference
 
-Los backups de configuraciones previas se guardan en:
-```bash
-~/.dotfiles_backup/AAAAMMDD-HHMMSS/
-```
+### Tmux (prefix: `Ctrl+Space`)
 
+| Key | Action |
+|-----|--------|
+| `prefix \|` | Split horizontal |
+| `prefix -` | Split vertical |
+| `prefix h/j/k/l` | Navigate panes |
+| `Ctrl+h/j/k/l` | Navigate panes (vim-aware) |
+| `prefix g` | Lazygit popup |
+| `prefix s` | Fuzzy session switcher |
+| `prefix f` | tmux-fzf |
+| `prefix T` | tmux-thumbs (copy URLs/paths) |
+| `prefix r` | Reload config |
+
+### Neovim (leader: `Space`)
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+p` / `<leader>ff` | Find files |
+| `Ctrl+f` / `<leader>fg` | Live grep |
+| `<leader><leader>` | Switch buffers |
+| `<leader>e` | Neo-tree float |
+| `Ctrl+n` | Toggle Neo-tree |
+| `<leader>ca` | Code actions |
+| `<leader>rn` | Rename symbol |
+| `gd` / `gr` / `gi` | Go to definition/references/implementation |
+| `<leader>db` | Toggle breakpoint |
+| `F5` | Start/continue debug |
+| `<leader>a` | Toggle Aerial (symbols) |
+| `<leader>cf` | Format buffer |
