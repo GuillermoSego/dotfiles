@@ -9,14 +9,19 @@ Personal dotfiles repository managing **Neovim**, **Tmux**, and **Zsh** configur
 ## Installation & Deployment
 
 ```bash
-# Install symlinks (creates timestamped backups in ~/.dotfiles_backup/)
+# Fresh machine: install everything from zero (idempotent, safe to re-run)
+./bootstrap.sh
+
+# Symlinks only (if dependencies are already installed)
 ./install.sh
 
 # Remove symlinks
 ./uninstall.sh
 ```
 
-Symlinks are created manually by `install.sh` (not GNU Stow). The directory layout mirrors the home directory structure: `nvim/.config/nvim/` → `~/.config/nvim/`, `tmux/.tmux.conf` → `~/.tmux.conf`, `zsh/.zshrc` → `~/.zshrc`.
+`bootstrap.sh` handles the full setup: system packages (apt), Neovim (AppImage), Oh-My-Zsh + plugins, TPM, NVM + Node.js, Python tools (black, debugpy), Rust + stylua, lazygit, symlinks, default shell, and headless plugin installs. The `main` branch has a macOS variant using Homebrew.
+
+Symlinks are created by `install.sh` (not GNU Stow). The directory layout mirrors the home directory structure: `nvim/.config/nvim/` → `~/.config/nvim/`, `tmux/.tmux.conf` → `~/.tmux.conf`, `zsh/.zshrc` → `~/.zshrc`.
 
 ## Neovim Architecture
 
