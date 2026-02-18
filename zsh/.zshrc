@@ -52,26 +52,26 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # Path additions
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
-# export PATH="/Users/guillermo_sego/anaconda3/bin:$PATH"  # commented out by conda initialize
-
 # >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/guillermo_sego/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+# Portable conda detection using $HOME instead of hardcoded paths
+__conda_setup="$("$HOME/anaconda3/bin/conda" 'shell.zsh' 'hook' 2> /dev/null)"
 if [ $? -eq 0 ]; then
     eval "$__conda_setup"
 else
-    if [ -f "/Users/guillermo_sego/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/Users/guillermo_sego/anaconda3/etc/profile.d/conda.sh"
+    if [ -f "$HOME/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "$HOME/anaconda3/etc/profile.d/conda.sh"
     else
-        export PATH="/Users/guillermo_sego/anaconda3/bin:$PATH"
+        export PATH="$HOME/anaconda3/bin:$PATH"
     fi
 fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# Google Cloud SDK
+if [ -f "$HOME/Downloads/google-cloud-sdk/path.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/path.zsh.inc"; fi
+if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"; fi
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/guillermo_sego/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/guillermo_sego/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/guillermo_sego/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/guillermo_sego/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+# Homebrew (Apple Silicon)
+if [ -d "/opt/homebrew/bin" ]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
