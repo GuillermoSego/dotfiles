@@ -52,29 +52,41 @@ ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 # Path additions
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
 
-# export PATH="/Users/guillermo_sego/anaconda3/bin:$PATH"  # commented out by conda initialize
-
 # >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/Users/guillermo_sego/anaconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/Users/guillermo_sego/anaconda3/etc/profile.d/conda.sh" ]; then
-        . "/Users/guillermo_sego/anaconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/Users/guillermo_sego/anaconda3/bin:$PATH"
+# Portable conda detection: searches common install locations
+for _conda_prefix in "$HOME/anaconda3" "$HOME/miniconda3" "/opt/conda"; do
+    if [ -x "$_conda_prefix/bin/conda" ]; then
+        __conda_setup="$("$_conda_prefix/bin/conda" 'shell.zsh' 'hook' 2> /dev/null)"
+        if [ $? -eq 0 ]; then
+            eval "$__conda_setup"
+        else
+            if [ -f "$_conda_prefix/etc/profile.d/conda.sh" ]; then
+                . "$_conda_prefix/etc/profile.d/conda.sh"
+            else
+                export PATH="$_conda_prefix/bin:$PATH"
+            fi
+        fi
+        unset __conda_setup
+        break
     fi
-fi
-unset __conda_setup
+done
+unset _conda_prefix
 # <<< conda initialize <<<
 
+# Google Cloud SDK — portable path detection
+for _gcloud_dir in "$HOME/google-cloud-sdk" "/usr/lib/google-cloud-sdk" "/snap/google-cloud-cli/current"; do
+    if [ -d "$_gcloud_dir" ]; then
+        [ -f "$_gcloud_dir/path.zsh.inc" ] && . "$_gcloud_dir/path.zsh.inc"
+        [ -f "$_gcloud_dir/completion.zsh.inc" ] && . "$_gcloud_dir/completion.zsh.inc"
+        break
+    fi
+done
+unset _gcloud_dir
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/guillermo_sego/Downloads/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/guillermo_sego/Downloads/google-cloud-sdk/path.zsh.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/guillermo_sego/Downloads/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/guillermo_sego/Downloads/google-cloud-sdk/completion.zsh.inc'; fi
+# Linuxbrew
+if [ -d "/home/linuxbrew/.linuxbrew" ]; then
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
 
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
