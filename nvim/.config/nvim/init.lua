@@ -4,13 +4,12 @@ vim.opt.relativenumber = false
 vim.opt.expandtab = true
 vim.opt.shiftwidth = 4
 vim.opt.tabstop = 4
-vim.opt.lazyredraw = true
 vim.opt.updatetime = 300
 vim.g.mapleader = " "
 
 -- Cargar lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not (vim.uv or vim.loop).fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
