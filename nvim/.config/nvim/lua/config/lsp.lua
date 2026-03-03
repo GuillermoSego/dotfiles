@@ -239,7 +239,7 @@ end
 
 -- Comando para reiniciar LSP
 vim.api.nvim_create_user_command("LspRestart", function()
-    vim.lsp.stop_client(vim.lsp.get_active_clients())
+    vim.lsp.stop_client(vim.lsp.get_clients())
     vim.cmd("edit")
 end, { desc = "Restart LSP" })
 

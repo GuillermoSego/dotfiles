@@ -1,17 +1,4 @@
 -- ~/.config/nvim/lua/config/lazy.lua
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
-    vim.fn.system({
-        "git",
-        "clone",
-        "--filter=blob:none",
-        "https://github.com/folke/lazy.nvim.git",
-        "--branch=stable",
-        lazypath,
-    })
-end
-vim.opt.rtp:prepend(lazypath)
-
 require("lazy").setup({
     -- ============================================
     -- UI Y TEMA
@@ -483,7 +470,7 @@ require("lazy").setup({
             require("trouble").setup({})
 
             -- Keymaps
-            vim.keymap.set("n", "<leader>xx", "<cmd>TroubleToggle<CR>", {
+            vim.keymap.set("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", {
                 desc = "Toggle Trouble",
                 noremap = true,
                 silent = true
@@ -501,7 +488,7 @@ require("lazy").setup({
             require("conform").setup({
                 format_on_save = {
                     timeout_ms = 1000,
-                    lsp_fallback = true,
+                    lsp_format = "fallback",
                 },
                 formatters_by_ft = {
                     python = { "black" },
@@ -515,21 +502,21 @@ require("lazy").setup({
             vim.keymap.set({ "n", "v" }, "<leader>cf", function()
                 require("conform").format({
                     async = false,
-                    lsp_fallback = true,
+                    lsp_format = "fallback",
                 })
             end, { desc = "Format buffer" })
 
             vim.keymap.set({ "n", "v" }, "<leader>jf", function()
                 require("conform").format({
                     async = false,
-                    lsp_fallback = true,
+                    lsp_format = "fallback",
                 })
             end, { desc = "Format JSON" })
 
             vim.keymap.set({ "n", "v" }, "<leader>jm", function()
                 require("conform").format({
                     async = false,
-                    lsp_fallback = false,
+                    lsp_format = "never",
                     formatters = { "jq" },
                 })
             end, { desc = "Minify JSON" })
