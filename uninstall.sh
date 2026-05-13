@@ -23,5 +23,7 @@ echo "[*] Removing symlinks created by dotfiles"
 remove_link "$HOME/.zshrc"
 remove_link "$HOME/.tmux.conf"
 remove_link "$HOME/.config/nvim"
+remove_link "$HOME/bin/tmux-copy"
+remove_link "$HOME/bin/tmux-sessionizer"
 
 echo "[✓] Uninstall complete."

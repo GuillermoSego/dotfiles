@@ -23,7 +23,7 @@ M.on_attach = function(client, bufnr)
     map("n", "gt", vim.lsp.buf.type_definition, "Go to type definition")
 
     -- ===== INFORMACIÓN =====
-    map("n", "K", vim.lsp.buf.hover, "Show hover info")
+    -- K is mapped by nvim-ufo with fallback to hover, so we skip it here
     map("n", "<C-k>", vim.lsp.buf.signature_help, "Show signature help")
     map("i", "<C-k>", vim.lsp.buf.signature_help, "Show signature help")
 
@@ -35,7 +35,7 @@ M.on_attach = function(client, bufnr)
     -- ===== DIAGNÓSTICOS =====
     map("n", "[d", vim.diagnostic.goto_prev, "Previous diagnostic")
     map("n", "]d", vim.diagnostic.goto_next, "Next diagnostic")
-    map("n", "<leader>e", vim.diagnostic.open_float, "Show diagnostic")
+    map("n", "<leader>xd", vim.diagnostic.open_float, "Show diagnostic float")
     map("n", "<leader>q", vim.diagnostic.setloclist, "Diagnostic list")
 
     -- ===== FORMATEO =====
@@ -59,11 +59,7 @@ M.on_attach = function(client, bufnr)
         navic.attach(client, bufnr)
     end
 
-    -- Opcional: Mostrar mensaje cuando LSP se conecta
-    vim.notify(
-        string.format("LSP [%s] attached to buffer %d", client.name, bufnr),
-        vim.log.levels.INFO
-    )
+    -- LSP attached (silencioso para no spammear con noice.nvim)
 end
 
 -- ============================================
@@ -201,8 +197,6 @@ M.setup = function()
     }
 
     -- ===== LUA_LS (Para configurar Neovim) =====
-    -- Descomenta si quieres configurar también Lua
-    --[[
     vim.lsp.config["lua_ls"] = {
         settings = {
             Lua = {
@@ -210,7 +204,7 @@ M.setup = function()
                     version = "LuaJIT",
                 },
                 diagnostics = {
-                    globals = { "vim" },  -- Reconoce 'vim' como global
+                    globals = { "vim" },
                 },
                 workspace = {
                     library = vim.api.nvim_get_runtime_file("", true),
@@ -224,13 +218,9 @@ M.setup = function()
         capabilities = capabilities,
         on_attach = on_attach,
     }
-    ]] --
 
     -- ===== HABILITAR SERVIDORES =====
-    vim.lsp.enable({ "pyright", "ruff" })
-
-    -- Si agregaste lua_ls, descoméntalo aquí también:
-    -- vim.lsp.enable({ "pyright", "ruff", "lua_ls" })
+    vim.lsp.enable({ "pyright", "ruff", "lua_ls" })
 end
 
 -- ============================================

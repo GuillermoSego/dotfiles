@@ -4,28 +4,20 @@ require("lazy").setup({
     -- UI Y TEMA
     -- ============================================
 
-    -- Tema Catppuccin
+    -- Tema Cyberdream
     {
-        "catppuccin/nvim",
-        name = "catppuccin",
+        "scottmckendry/cyberdream.nvim",
+        lazy = false,
         priority = 1000,
         config = function()
-            require("catppuccin").setup({
-                integrations = {
-                    neotree = true,
-                    lualine = true,
-                    treesitter = true,
-                    cmp = true,
-                    telescope = true,
-                    gitsigns = true,
-                    dap = true,
-                    dap_ui = true,
-                    aerial = true,
-                    noice = true,
-                    notify = true,
-                },
+            require("cyberdream").setup({
+                transparent = true,
+                italic_comments = true,
+                hide_fillchars = false,
+                borderless_telescope = true,
+                terminal_colors = true,
             })
-            vim.cmd.colorscheme("catppuccin-macchiato")
+            vim.cmd.colorscheme("cyberdream")
         end,
     },
 
@@ -42,7 +34,7 @@ require("lazy").setup({
             require("lualine").setup({
                 options = {
                     icons_enabled = true,
-                    theme = "catppuccin",
+                    theme = "cyberdream",
                     component_separators = { left = "", right = "" },
                     section_separators = { left = "", right = "" },
                 },
@@ -83,6 +75,8 @@ require("lazy").setup({
                 popup_border_style = "rounded",
                 enable_git_status = true,
                 enable_diagnostics = true,
+
+                open_files_do_not_replace_types = { "terminal", "Trouble", "qf" },
 
                 -- Posición por defecto
                 default_component_configs = {
@@ -139,8 +133,6 @@ require("lazy").setup({
                         ["<2-LeftMouse>"] = "open",
                         ["<cr>"] = "open",
                         ["<esc>"] = "cancel",
-                        ["P"] = { "toggle_preview", config = { use_float = true, use_image_nvim = true } },
-                        ["l"] = "focus_preview",
                         ["S"] = "open_split",
                         ["s"] = "open_vsplit",
                         ["t"] = "open_tabnew",
@@ -196,7 +188,7 @@ require("lazy").setup({
                     },
                     group_empty_dirs = false,
                     hijack_netrw_behavior = "open_default",
-                    use_libuv_file_watcher = false,
+                    use_libuv_file_watcher = true,
                     window = {
                         mappings = {
                             ["<bs>"] = "navigate_up",
@@ -219,10 +211,16 @@ require("lazy").setup({
                             ["ot"] = { "order_by_type", nowait = false },
                         },
                         fuzzy_finder_mappings = {
-                            ["<down>"] = "move_cursor_down",
-                            ["<C-n>"] = "move_cursor_down",
-                            ["<up>"] = "move_cursor_up",
-                            ["<C-p>"] = "move_cursor_up",
+                            -- Navigate results while typing in fuzzy finder
+                            -- (j/k type characters, so use Ctrl or Tab)
+                            ["<C-j>"]   = "move_cursor_down",
+                            ["<C-k>"]   = "move_cursor_up",
+                            ["<C-n>"]   = "move_cursor_down",
+                            ["<C-p>"]   = "move_cursor_up",
+                            ["<Tab>"]   = "move_cursor_down",
+                            ["<S-Tab>"] = "move_cursor_up",
+                            ["<down>"]  = "move_cursor_down",
+                            ["<up>"]    = "move_cursor_up",
                         },
                     },
                 },
@@ -277,19 +275,14 @@ require("lazy").setup({
             -- KEYMAPS
             -- ============================================
 
-            -- Toggle lateral (normal)
+            -- Toggle sidebar (preview handled by Telescope file browser now)
             vim.keymap.set("n", "<C-n>", ":Neotree toggle<CR>", {
-                desc = "Toggle Neo-tree",
+                desc = "Toggle Neo-tree sidebar",
                 noremap = true,
                 silent = true
             })
 
-            -- Toggle FLOTANTE (COMO TU JEFE)
-            vim.keymap.set("n", "<leader>e", ":Neotree float<CR>", {
-                desc = "Neo-tree Float",
-                noremap = true,
-                silent = true
-            })
+            -- leader+e → Telescope file browser (defined in Telescope config)
 
             -- Focus en el archivo actual
             vim.keymap.set("n", "<leader>nf", ":Neotree reveal<CR>", {
@@ -362,9 +355,9 @@ require("lazy").setup({
             -- Keymaps de Git
             local gs = require("gitsigns")
 
-            -- Navegación entre hunks
-            vim.keymap.set("n", "]c", gs.next_hunk, { desc = "Next git hunk" })
-            vim.keymap.set("n", "[c", gs.prev_hunk, { desc = "Previous git hunk" })
+            -- Navegación entre hunks (]h/[h para no colisionar con ]c/[c de textobjects)
+            vim.keymap.set("n", "]h", gs.next_hunk, { desc = "Next git hunk" })
+            vim.keymap.set("n", "[h", gs.prev_hunk, { desc = "Previous git hunk" })
 
             -- Acciones de Git
             vim.keymap.set("n", "<leader>hs", gs.stage_hunk, { desc = "Stage hunk" })
@@ -381,6 +374,24 @@ require("lazy").setup({
     -- ============================================
     -- EDICIÓN Y NAVEGACIÓN
     -- ============================================
+
+    -- Navegación seamless entre Neovim y Tmux (Ctrl+hjkl)
+    {
+        "christoomey/vim-tmux-navigator",
+        lazy = false,
+        cmd = {
+            "TmuxNavigateLeft",
+            "TmuxNavigateDown",
+            "TmuxNavigateUp",
+            "TmuxNavigateRight",
+        },
+        keys = {
+            { "<C-h>", "<cmd>TmuxNavigateLeft<CR>",  desc = "Navigate left (tmux/vim)" },
+            { "<C-j>", "<cmd>TmuxNavigateDown<CR>",  desc = "Navigate down (tmux/vim)" },
+            { "<C-k>", "<cmd>TmuxNavigateUp<CR>",    desc = "Navigate up (tmux/vim)" },
+            { "<C-l>", "<cmd>TmuxNavigateRight<CR>", desc = "Navigate right (tmux/vim)" },
+        },
+    },
 
     -- Multi-cursor
     {
@@ -402,13 +413,7 @@ require("lazy").setup({
         end,
     },
 
-    -- Comentarios (gcc para comentar línea, gc en visual)
-    {
-        "numToStr/Comment.nvim",
-        config = function()
-            require("Comment").setup()
-        end,
-    },
+    -- Comentarios: gc/gcc son nativos en Neovim 0.10+ (no se necesita plugin)
 
     -- Autocompletado de paréntesis/comillas
     {
@@ -427,17 +432,10 @@ require("lazy").setup({
 
     -- ============================================
     -- LSP Y DIAGNÓSTICOS
+    -- (Orden de carga: mason → mason-lspconfig → lspconfig)
     -- ============================================
 
-    -- LSP
-    {
-        "neovim/nvim-lspconfig",
-        config = function()
-            require("config.lsp").setup()
-        end,
-    },
-
-    -- Mason (instalador de LSP servers)
+    -- Mason (instalador de LSP servers) — debe cargar primero
     {
         "williamboman/mason.nvim",
         build = ":MasonUpdate",
@@ -448,17 +446,26 @@ require("lazy").setup({
 
     {
         "williamboman/mason-lspconfig.nvim",
-        version = "1.29.1",
         dependencies = {
-            "neovim/nvim-lspconfig",
             "williamboman/mason.nvim",
         },
         config = function()
             require("mason-lspconfig").setup({
-                ensure_installed = { "pyright", "lua_ls" },
+                ensure_installed = { "pyright", "ruff", "lua_ls" },
                 automatic_installation = true,
-                handlers = {},
             })
+        end,
+    },
+
+    -- LSP — carga después de mason-lspconfig para que los servers ya estén disponibles
+    {
+        "neovim/nvim-lspconfig",
+        dependencies = {
+            "williamboman/mason.nvim",
+            "williamboman/mason-lspconfig.nvim",
+        },
+        config = function()
+            require("config.lsp").setup()
         end,
     },
 
@@ -494,6 +501,13 @@ require("lazy").setup({
                     python = { "black" },
                     lua = { "stylua" },
                     javascript = { "prettier" },
+                    typescript = { "prettier" },
+                    javascriptreact = { "prettier" },
+                    typescriptreact = { "prettier" },
+                    html = { "prettier" },
+                    css = { "prettier" },
+                    yaml = { "prettier" },
+                    markdown = { "prettier" },
                     json = { "jq" },
                 },
             })
@@ -509,15 +523,23 @@ require("lazy").setup({
             vim.keymap.set({ "n", "v" }, "<leader>jf", function()
                 require("conform").format({
                     async = false,
-                    lsp_format = "fallback",
+                    lsp_format = "never",
+                    formatters = { "jq" },
                 })
-            end, { desc = "Format JSON" })
+            end, { desc = "Format JSON (jq)" })
+
+            -- Custom formatter: jq minify (compact output)
+            require("conform").formatters.jq_minify = {
+                command = "jq",
+                args = { "-c", "." },
+                stdin = true,
+            }
 
             vim.keymap.set({ "n", "v" }, "<leader>jm", function()
                 require("conform").format({
                     async = false,
                     lsp_format = "never",
-                    formatters = { "jq" },
+                    formatters = { "jq_minify" },
                 })
             end, { desc = "Minify JSON" })
         end,
@@ -532,13 +554,14 @@ require("lazy").setup({
         build = ":TSUpdate",
         event = { "BufReadPost", "BufNewFile" },
         config = function()
-            require("nvim-treesitter.configs").setup({
+            -- nvim-treesitter: only manage parser installation
+            -- Neovim 0.12+ enables treesitter highlight/indent natively
+            require("nvim-treesitter").setup({
                 ensure_installed = {
                     "python", "lua", "bash", "json",
-                    "yaml", "markdown", "javascript"
+                    "yaml", "markdown", "javascript",
+                    "typescript", "html", "css", "tsx",
                 },
-                highlight = { enable = true },
-                indent = { enable = true },
             })
         end,
     },
@@ -547,43 +570,41 @@ require("lazy").setup({
         "nvim-treesitter/nvim-treesitter-textobjects",
         dependencies = { "nvim-treesitter/nvim-treesitter" },
         config = function()
-            require("nvim-treesitter.configs").setup({
-                textobjects = {
-                    select = {
-                        enable = true,
-                        lookahead = true,
-                        keymaps = {
-                            ["af"] = "@function.outer",
-                            ["if"] = "@function.inner",
-                            ["ac"] = "@class.outer",
-                            ["ic"] = "@class.inner",
-                            ["ab"] = "@block.outer",
-                            ["ib"] = "@block.inner",
-                        },
+            require("nvim-treesitter-textobjects").setup({
+                select = {
+                    enable = true,
+                    lookahead = true,
+                    keymaps = {
+                        ["af"] = "@function.outer",
+                        ["if"] = "@function.inner",
+                        ["ac"] = "@class.outer",
+                        ["ic"] = "@class.inner",
+                        ["ab"] = "@block.outer",
+                        ["ib"] = "@block.inner",
                     },
-                    move = {
-                        enable = true,
-                        set_jumps = true,
-                        goto_next_start = {
-                            ["]m"] = "@function.outer",
-                            ["]c"] = "@class.outer",
-                            ["]b"] = "@block.outer",
-                        },
-                        goto_next_end = {
-                            ["]M"] = "@function.outer",
-                            ["]C"] = "@class.outer",
-                            ["]B"] = "@block.outer",
-                        },
-                        goto_previous_start = {
-                            ["[m"] = "@function.outer",
-                            ["[c"] = "@class.outer",
-                            ["[b"] = "@block.outer",
-                        },
-                        goto_previous_end = {
-                            ["[M"] = "@function.outer",
-                            ["[C"] = "@class.outer",
-                            ["[B"] = "@block.outer",
-                        },
+                },
+                move = {
+                    enable = true,
+                    set_jumps = true,
+                    goto_next_start = {
+                        ["]m"] = "@function.outer",
+                        ["]c"] = "@class.outer",
+                        ["]b"] = "@block.outer",
+                    },
+                    goto_next_end = {
+                        ["]M"] = "@function.outer",
+                        ["]C"] = "@class.outer",
+                        ["]B"] = "@block.outer",
+                    },
+                    goto_previous_start = {
+                        ["[m"] = "@function.outer",
+                        ["[c"] = "@class.outer",
+                        ["[b"] = "@block.outer",
+                    },
+                    goto_previous_end = {
+                        ["[M"] = "@function.outer",
+                        ["[C"] = "@class.outer",
+                        ["[B"] = "@block.outer",
                     },
                 },
             })
@@ -645,6 +666,7 @@ require("lazy").setup({
             "nvim-lua/plenary.nvim",
             "nvim-telescope/telescope-fzf-native.nvim",     -- Búsqueda más rápida
             "nvim-telescope/telescope-live-grep-args.nvim", -- Grep con argumentos
+            "nvim-telescope/telescope-file-browser.nvim",   -- Explorador con preview
         },
         config = function()
             local telescope = require("telescope")
@@ -754,13 +776,27 @@ require("lazy").setup({
                         override_file_sorter = true,
                         case_mode = "smart_case",
                     },
+                    file_browser = {
+                        theme = "ivy",
+                        hijack_netrw = false,
+                        hidden = true,
+                        respect_gitignore = true,
+                        grouped = true,
+                        previewer = true,
+                        initial_mode = "normal",
+                        layout_config = {
+                            height = 0.6,
+                            preview_width = 0.55,
+                        },
+                    },
                 },
             })
 
             -- Cargar extensiones
             telescope.load_extension("fzf")
-            telescope.load_extension("noice")  -- Integración con noice
-            telescope.load_extension("aerial") -- Integración con aerial
+            telescope.load_extension("noice")        -- Integración con noice
+            telescope.load_extension("aerial")       -- Integración con aerial
+            telescope.load_extension("file_browser") -- Explorador de archivos con preview
 
             -- ============================================
             -- KEYMAPS DE TELESCOPE
@@ -856,6 +892,18 @@ require("lazy").setup({
             -- NOICE (Mensajes y notificaciones)
             vim.keymap.set("n", "<leader>fn", ":Telescope noice<CR>", {
                 desc = "Noice messages"
+            })
+
+            -- FILE BROWSER (reemplaza Neo-tree float — preview siempre visible)
+            vim.keymap.set("n", "<leader>e", function()
+                require("telescope").extensions.file_browser.file_browser({
+                    path = "%:p:h",
+                    select_buffer = true,
+                    previewer = true,
+                    initial_mode = "normal",
+                })
+            end, {
+                desc = "File Browser (preview)",
             })
         end,
     },
@@ -1019,22 +1067,25 @@ require("lazy").setup({
         end,
     },
 
-    -- Colorizer (ver colores en el código)
+    -- Colorizer (ver colores en el código) — NvChad fork (mantenido)
     {
-        "norcalli/nvim-colorizer.lua",
+        "NvChad/nvim-colorizer.lua",
         event = "BufRead",
         config = function()
             require("colorizer").setup({
-                "*", -- Activar en todos los archivos
-            }, {
-                RGB = true,
-                RRGGBB = true,
-                names = true,
-                RRGGBBAA = true,
-                rgb_fn = true,
-                hsl_fn = true,
-                css = true,
-                css_fn = true,
+                filetypes = { "*" },
+                user_default_options = {
+                    RGB = true,
+                    RRGGBB = true,
+                    names = true,
+                    RRGGBBAA = true,
+                    rgb_fn = true,
+                    hsl_fn = true,
+                    css = true,
+                    css_fn = true,
+                    tailwind = false,
+                    mode = "background",
+                },
             })
         end,
     },
@@ -1341,8 +1392,8 @@ require("lazy").setup({
                 { "<leader>n",        group = "neo-tree" },
 
                 -- Navegación (ya están definidos en la config, solo los documentamos)
-                { "]c",               desc = "Next git hunk" },
-                { "[c",               desc = "Previous git hunk" },
+                { "]h",               desc = "Next git hunk" },
+                { "[h",               desc = "Previous git hunk" },
                 { "]m",               desc = "Next function start" },
                 { "[m",               desc = "Previous function start" },
                 { "]b",               desc = "Next block" },
@@ -1378,8 +1429,8 @@ require("lazy").setup({
                 -- Aerial (símbolos)
                 { "<leader>a",        desc = "Toggle Aerial" },
 
-                -- Neo-tree flotante (COMO TU JEFE)
-                { "<leader>e",        desc = "Neo-tree Float" },
+                -- File Browser con preview (Telescope)
+                { "<leader>e",        desc = "File Browser (preview)" },
             })
         end,
     },

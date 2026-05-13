@@ -12,13 +12,14 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Plugins to load
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 
+# Plugin config (must be set BEFORE sourcing oh-my-zsh)
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+
 # Source Oh My Zsh
 source $ZSH/oh-my-zsh.sh
 
-# Export TERM for 256-color support
-export TERM="xterm-256color"
-
-# Enable true color support for zsh
+# True color support (let terminal/tmux handle TERM — only set COLORTERM)
 export COLORTERM="truecolor"
 
 # Set language environment
@@ -33,9 +34,24 @@ fi
 
 # Aliases for common tasks
 alias ll="ls -lah"
+alias la="ls -A"
 alias vim="nvim"
+alias v="nvim"
 alias zshconfig="nvim ~/.zshrc"
 alias p10kconfig="nvim ~/.p10k.zsh"
+alias lg="lazygit"
+
+# Git aliases (complementan los de oh-my-zsh git plugin)
+alias ga="git add"
+alias gap="git add -p"
+alias gcm="git commit -m"
+alias gco="git checkout"
+alias gst="git status -sb"
+alias glog="git log --oneline --graph --decorate -15"
+alias gd="git diff"
+alias gds="git diff --staged"
+alias gp="git push"
+alias gpl="git pull --rebase"
 
 # Load Powerlevel10k configuration if available
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -44,10 +60,6 @@ alias p10kconfig="nvim ~/.p10k.zsh"
 if [[ -n $TMUX ]]; then
   export TERM="tmux-256color"
 fi
-
-# Autocompletado (mejora visibilidad con colores)
-ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=240"
-ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 
 # Path additions
 export PATH=$HOME/bin:$HOME/.local/bin:/usr/local/bin:$PATH
@@ -88,6 +100,14 @@ if [ -d "/opt/homebrew/bin" ]; then
     eval "$(/opt/homebrew/bin/brew shellenv)"
 fi
 
+# NVM — lazy loading (saves ~200ms on shell startup)
 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+_nvm_lazy_load() {
+    unset -f nvm node npm npx yarn pnpm 2>/dev/null
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+}
+for _cmd in nvm node npm npx yarn pnpm; do
+    eval "${_cmd}() { _nvm_lazy_load; ${_cmd} \"\$@\"; }"
+done
+unset _cmd
