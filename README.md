@@ -3,8 +3,8 @@
 Personal dev environment for **macOS** and **WSL/Ubuntu**, ready to install on a fresh machine with a single command.
 
 Includes:
-- **Neovim** — LSP, Treesitter, Telescope, nvim-dap, lazy.nvim (~47 plugins)
-- **Tmux** — Catppuccin Mocha theme, vim-tmux-navigator, TPM plugins
+- **Neovim** — LSP (Go, Python, Lua), Treesitter, Telescope, mini.files, nvim-dap, lazy.nvim
+- **Tmux** — Cyberdream Powerline theme, vim-tmux-navigator, fzf session manager, TPM plugins
 - **Zsh** — Oh-My-Zsh + Powerlevel10k + autosuggestions + syntax highlighting
 
 ## Install from zero
@@ -22,15 +22,16 @@ This single script installs **everything** from scratch (idempotent, safe to re-
 | Phase | What it installs |
 |-------|-----------------|
 | 1 | Homebrew (if not present) |
-| 2 | Brew packages (neovim, tmux, fzf, ripgrep, fd, jq, lazygit, python3, etc.) |
+| 2 | Brew packages (neovim, tmux, fzf, ripgrep, fd, jq, lazygit, go, python3, etc.) |
 | 3 | Oh-My-Zsh + Powerlevel10k + zsh plugins |
 | 4 | TPM (Tmux Plugin Manager) |
 | 5 | NVM + Node.js LTS + prettier |
 | 6 | Python tools (black, debugpy) |
 | 7 | Rust + stylua |
-| 8 | Symlinks via `install.sh` |
-| 9 | Sets zsh as default shell |
-| 10 | Headless plugin installs (TPM, lazy.nvim, Mason, Treesitter) |
+| 8 | Go toolchain (gopls, gofumpt, goimports-reviser, golines, delve) |
+| 9 | Symlinks via `install.sh` |
+| 10 | Sets zsh as default shell |
+| 11 | Headless plugin installs (TPM, lazy.nvim, Mason, mason-tool-installer, Treesitter) |
 
 > **WSL/Ubuntu**: Switch to the `linux` branch — its `bootstrap.sh` uses apt instead of Homebrew.
 
@@ -77,9 +78,10 @@ dotfiles/
 │   ├── init.lua             # entry point, options, leader key
 │   └── lua/config/
 │       ├── lazy.lua         # all plugin specs + keymaps
-│       └── lsp.lua          # LSP servers (pyright, ruff)
+│       └── lsp.lua          # LSP servers (gopls, pyright, ruff, lua_ls)
 ├── tmux/.tmux.conf          -> ~/.tmux.conf
 ├── tmux/tmux-copy           -> ~/bin/tmux-copy
+├── tmux/tmux-sessionizer    -> ~/bin/tmux-sessionizer
 ├── zsh/.zshrc               -> ~/.zshrc
 ├── bootstrap.sh             # full environment setup from zero
 ├── install.sh               # symlinks + backups
@@ -97,7 +99,10 @@ dotfiles/
 | `prefix h/j/k/l` | Navigate panes |
 | `Ctrl+h/j/k/l` | Navigate panes (vim-aware) |
 | `prefix g` | Lazygit popup |
-| `prefix s` | Fuzzy session switcher |
+| `prefix s` | Session switcher (fzf + preview) |
+| `prefix w` | Window switcher (fzf + preview) |
+| `prefix X` | Kill sessions (multi-select) |
+| `prefix R` | Rename current session |
 | `prefix f` | tmux-fzf |
 | `prefix T` | tmux-thumbs (copy URLs/paths) |
 | `prefix r` | Reload config |
@@ -109,12 +114,15 @@ dotfiles/
 | `Ctrl+p` / `<leader>ff` | Find files |
 | `Ctrl+f` / `<leader>fg` | Live grep |
 | `<leader><leader>` | Switch buffers |
-| `<leader>e` | Neo-tree float |
-| `Ctrl+n` | Toggle Neo-tree |
+| `<leader>e` | File explorer (mini.files, current dir) |
+| `-` | File explorer (mini.files, quick alias) |
+| `Ctrl+n` | Toggle file explorer (project root) |
 | `<leader>ca` | Code actions |
 | `<leader>rn` | Rename symbol |
 | `gd` / `gr` / `gi` | Go to definition/references/implementation |
 | `<leader>db` | Toggle breakpoint |
+| `<leader>dgt` | Debug nearest Go test |
+| `<leader>dgl` | Re-run last Go test debug |
 | `F5` | Start/continue debug |
 | `<leader>a` | Toggle Aerial (symbols) |
 | `<leader>cf` | Format buffer |

@@ -37,7 +37,7 @@ install_brew_packages() {
     info "Phase 2: Brew packages"
     local pkgs=(
         neovim tmux fzf htop jq ripgrep fd
-        python3 curl wget git lazygit
+        python3 curl wget git lazygit go
     )
     local to_install=()
     for pkg in "${pkgs[@]}"; do
@@ -169,17 +169,45 @@ install_rust_and_stylua() {
     ok "stylua ready"
 }
 
-# ── Phase 8: Symlinks (install.sh) ───────────────────────────
+# ── Phase 8: Go toolchain ────────────────────────────────────
+install_go_tools() {
+    info "Phase 8: Go toolchain"
+    if ! has go; then
+        warn "Go not found — skipping Go tools (install Go first)"
+        return
+    fi
+
+    local go_tools=(
+        "golang.org/x/tools/gopls@latest"
+        "mvdan.cc/gofumpt@latest"
+        "github.com/incu6us/goimports-reviser/v3@latest"
+        "github.com/segmentio/golines@latest"
+        "github.com/go-delve/delve/cmd/dlv@latest"
+    )
+    for tool in "${go_tools[@]}"; do
+        local bin_name
+        bin_name="$(basename "${tool%%@*}")"
+        if has "$bin_name"; then
+            ok "$bin_name already installed"
+        else
+            info "go install $tool"
+            go install "$tool"
+        fi
+    done
+    ok "Go toolchain ready"
+}
+
+# ── Phase 9: Symlinks (install.sh) ───────────────────────────
 run_install_script() {
-    info "Phase 8: Symlinks"
+    info "Phase 9: Symlinks"
     chmod +x "$REPO_DIR/install.sh"
     bash "$REPO_DIR/install.sh"
     ok "Symlinks created"
 }
 
-# ── Phase 9: Default shell → zsh ─────────────────────────────
+# ── Phase 10: Default shell → zsh ────────────────────────────
 set_default_shell() {
-    info "Phase 9: Default shell"
+    info "Phase 10: Default shell"
     local zsh_path
     zsh_path="$(command -v zsh)"
     if [ "$SHELL" = "$zsh_path" ]; then
@@ -196,9 +224,9 @@ set_default_shell() {
     ok "Default shell set to zsh (takes effect on next login)"
 }
 
-# ── Phase 10: Headless plugin installs ────────────────────────
+# ── Phase 11: Headless plugin installs ────────────────────────
 install_plugins_headless() {
-    info "Phase 10: Headless plugin installs"
+    info "Phase 11: Headless plugin installs"
 
     # TPM plugins
     if [ -x "$HOME/.tmux/plugins/tpm/bin/install_plugins" ]; then
@@ -210,11 +238,13 @@ install_plugins_headless() {
     info "Installing Neovim plugins (lazy.nvim sync)"
     nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
 
-    info "Installing Mason packages"
-    nvim --headless "+MasonInstall pyright ruff lua-language-server" +qa 2>/dev/null || true
+    # mason-tool-installer runs on start and installs all ensure_installed tools
+    # (LSP servers, formatters, debuggers) — just need a brief headless session
+    info "Installing Mason packages (LSP servers, formatters, debuggers)"
+    nvim --headless "+MasonToolsInstallSync" +qa 2>/dev/null || true
 
     info "Installing Treesitter parsers"
-    nvim --headless "+TSInstall python lua bash json yaml markdown javascript" +qa 2>/dev/null || true
+    nvim --headless "+TSInstall python lua bash json yaml markdown javascript go gomod gosum gowork" +qa 2>/dev/null || true
 
     ok "Headless plugin installs done"
 }
@@ -234,6 +264,7 @@ main() {
     install_node
     install_python_tools
     install_rust_and_stylua
+    install_go_tools
     run_install_script
     set_default_shell
     install_plugins_headless

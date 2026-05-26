@@ -219,8 +219,50 @@ M.setup = function()
         on_attach = on_attach,
     }
 
+    -- ===== GOPLS (Go) =====
+    vim.lsp.config["gopls"] = {
+        settings = {
+            gopls = {
+                -- Análisis estático completo
+                analyses = {
+                    unusedparams = true,
+                    shadow = true,
+                    nilness = true,
+                    unusedwrite = true,
+                    useany = true,
+                },
+                -- Imports automáticos al guardar
+                gofumpt = true,
+
+                -- Completions mejorados
+                usePlaceholders = true,
+                completeUnimported = true,
+
+                -- Inlay hints (tipos inferidos, nombres de params)
+                hints = {
+                    assignVariableTypes = true,
+                    compositeLiteralFields = true,
+                    compositeLiteralTypes = true,
+                    constantValues = true,
+                    functionTypeParameters = true,
+                    parameterNames = true,
+                    rangeVariableTypes = true,
+                },
+
+                -- Semántica de código
+                semanticTokens = true,
+                staticcheck = true,
+
+                -- Build
+                directoryFilters = { "-.git", "-.vscode", "-node_modules" },
+            },
+        },
+        capabilities = capabilities,
+        on_attach = on_attach,
+    }
+
     -- ===== HABILITAR SERVIDORES =====
-    vim.lsp.enable({ "pyright", "ruff", "lua_ls" })
+    vim.lsp.enable({ "pyright", "ruff", "lua_ls", "gopls" })
 end
 
 -- ============================================

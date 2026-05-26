@@ -60,250 +60,206 @@ require("lazy").setup({
         end,
     },
 
-    -- Explorador de archivos (Neo-tree - más moderno)
+    -- Mini.files — Miller columns file explorer con preview (como Finder de macOS)
     {
-        "nvim-neo-tree/neo-tree.nvim",
-        branch = "v3.x",
-        dependencies = {
-            "nvim-lua/plenary.nvim",
-            "nvim-tree/nvim-web-devicons",
-            "MunifTanjim/nui.nvim",
-        },
+        "echasnovski/mini.files",
+        version = false,
+        dependencies = { "nvim-tree/nvim-web-devicons" },
         config = function()
-            require("neo-tree").setup({
-                close_if_last_window = false,
-                popup_border_style = "rounded",
-                enable_git_status = true,
-                enable_diagnostics = true,
-
-                open_files_do_not_replace_types = { "terminal", "Trouble", "qf" },
-
-                -- Posición por defecto
-                default_component_configs = {
-                    indent = {
-                        indent_size = 2,
-                        padding = 1,
-                        with_markers = true,
-                        indent_marker = "│",
-                        last_indent_marker = "└",
-                        highlight = "NeoTreeIndentMarker",
-                    },
-                    icon = {
-                        folder_closed = "",
-                        folder_open = "",
-                        folder_empty = "",
-                        default = "",
-                    },
-                    modified = {
-                        symbol = "[+]",
-                        highlight = "NeoTreeModified",
-                    },
-                    name = {
-                        trailing_slash = false,
-                        use_git_status_colors = true,
-                        highlight = "NeoTreeFileName",
-                    },
-                    git_status = {
-                        symbols = {
-                            added     = "✚",
-                            modified  = "",
-                            deleted   = "✖",
-                            renamed   = "󰁕",
-                            untracked = "",
-                            ignored   = "",
-                            unstaged  = "󰄱",
-                            staged    = "",
-                            conflict  = "",
-                        }
-                    },
+            local mini_files = require("mini.files")
+            mini_files.setup({
+                -- Miller columns con preview siempre visible
+                windows = {
+                    preview = true,
+                    width_focus = 30,
+                    width_nofocus = 15,
+                    width_preview = 50,
                 },
-
-                window = {
-                    position = "left",
-                    width = 35,
-                    mapping_options = {
-                        noremap = true,
-                        nowait = true,
-                    },
-                    mappings = {
-                        ["<space>"] = {
-                            "toggle_node",
-                            nowait = false,
-                        },
-                        ["<2-LeftMouse>"] = "open",
-                        ["<cr>"] = "open",
-                        ["<esc>"] = "cancel",
-                        ["S"] = "open_split",
-                        ["s"] = "open_vsplit",
-                        ["t"] = "open_tabnew",
-                        ["w"] = "open_with_window_picker",
-                        ["C"] = "close_node",
-                        ["z"] = "close_all_nodes",
-                        ["a"] = {
-                            "add",
-                            config = {
-                                show_path = "none"
-                            }
-                        },
-                        ["A"] = "add_directory",
-                        ["d"] = "delete",
-                        ["r"] = "rename",
-                        ["y"] = "copy_to_clipboard",
-                        ["x"] = "cut_to_clipboard",
-                        ["p"] = "paste_from_clipboard",
-                        ["c"] = "copy",
-                        ["m"] = "move",
-                        ["q"] = "close_window",
-                        ["R"] = "refresh",
-                        ["?"] = "show_help",
-                        ["<"] = "prev_source",
-                        [">"] = "next_source",
-                        ["i"] = "show_file_details",
-                    },
+                options = {
+                    permanent_delete = false,   -- Usa trash en vez de rm
+                    use_as_default_explorer = true,  -- Reemplaza netrw
                 },
-
-                filesystem = {
-                    filtered_items = {
-                        visible = false,
-                        hide_dotfiles = false,
-                        hide_gitignored = false,
-                        hide_hidden = true,
-                        hide_by_name = {
-                            "node_modules"
-                        },
-                        hide_by_pattern = {
-                            "*.pyc",
-                        },
-                        always_show = {
-                            ".gitignore",
-                        },
-                        never_show = {
-                            ".DS_Store",
-                            "thumbs.db"
-                        },
-                    },
-                    follow_current_file = {
-                        enabled = true,
-                        leave_dirs_open = false,
-                    },
-                    group_empty_dirs = false,
-                    hijack_netrw_behavior = "open_default",
-                    use_libuv_file_watcher = true,
-                    window = {
-                        mappings = {
-                            ["<bs>"] = "navigate_up",
-                            ["."] = "set_root",
-                            ["H"] = "toggle_hidden",
-                            ["/"] = "fuzzy_finder",
-                            ["D"] = "fuzzy_finder_directory",
-                            ["#"] = "fuzzy_sorter",
-                            ["f"] = "filter_on_submit",
-                            ["<c-x>"] = "clear_filter",
-                            ["[g"] = "prev_git_modified",
-                            ["]g"] = "next_git_modified",
-                            ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-                            ["oc"] = { "order_by_created", nowait = false },
-                            ["od"] = { "order_by_diagnostics", nowait = false },
-                            ["og"] = { "order_by_git_status", nowait = false },
-                            ["om"] = { "order_by_modified", nowait = false },
-                            ["on"] = { "order_by_name", nowait = false },
-                            ["os"] = { "order_by_size", nowait = false },
-                            ["ot"] = { "order_by_type", nowait = false },
-                        },
-                        fuzzy_finder_mappings = {
-                            -- Navigate results while typing in fuzzy finder
-                            -- (j/k type characters, so use Ctrl or Tab)
-                            ["<C-j>"]   = "move_cursor_down",
-                            ["<C-k>"]   = "move_cursor_up",
-                            ["<C-n>"]   = "move_cursor_down",
-                            ["<C-p>"]   = "move_cursor_up",
-                            ["<Tab>"]   = "move_cursor_down",
-                            ["<S-Tab>"] = "move_cursor_up",
-                            ["<down>"]  = "move_cursor_down",
-                            ["<up>"]    = "move_cursor_up",
-                        },
-                    },
-                },
-
-                buffers = {
-                    follow_current_file = {
-                        enabled = true,
-                        leave_dirs_open = false,
-                    },
-                    group_empty_dirs = true,
-                    show_unloaded = true,
-                    window = {
-                        mappings = {
-                            ["bd"] = "buffer_delete",
-                            ["<bs>"] = "navigate_up",
-                            ["."] = "set_root",
-                            ["o"] = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-                            ["oc"] = { "order_by_created", nowait = false },
-                            ["od"] = { "order_by_diagnostics", nowait = false },
-                            ["om"] = { "order_by_modified", nowait = false },
-                            ["on"] = { "order_by_name", nowait = false },
-                            ["os"] = { "order_by_size", nowait = false },
-                            ["ot"] = { "order_by_type", nowait = false },
-                        }
-                    },
-                },
-
-                git_status = {
-                    window = {
-                        position = "float",
-                        mappings = {
-                            ["A"]  = "git_add_all",
-                            ["gu"] = "git_unstage_file",
-                            ["ga"] = "git_add_file",
-                            ["gr"] = "git_revert_file",
-                            ["gc"] = "git_commit",
-                            ["gp"] = "git_push",
-                            ["gg"] = "git_commit_and_push",
-                            ["o"]  = { "show_help", nowait = false, config = { title = "Order by", prefix_key = "o" } },
-                            ["oc"] = { "order_by_created", nowait = false },
-                            ["od"] = { "order_by_diagnostics", nowait = false },
-                            ["om"] = { "order_by_modified", nowait = false },
-                            ["on"] = { "order_by_name", nowait = false },
-                            ["os"] = { "order_by_size", nowait = false },
-                            ["ot"] = { "order_by_type", nowait = false },
-                        }
-                    }
+                mappings = {
+                    close       = "q",
+                    go_in       = "l",
+                    go_in_plus  = "<CR>",       -- Abre archivo y cierra mini.files
+                    go_out      = "h",
+                    go_out_plus = "H",          -- Va al padre y cierra directorio hijo
+                    reset       = "<BS>",
+                    reveal_cwd  = "@",
+                    show_help   = "g?",
+                    synchronize = "=",
+                    trim_left   = "<",
+                    trim_right  = ">",
                 },
             })
 
-            -- ============================================
-            -- KEYMAPS
-            -- ============================================
+            -- ── Git status integration ──────────────────────────
+            -- Colores Cyberdream para git status
+            vim.api.nvim_set_hl(0, "MiniFilesGitAdded",    { fg = "#5eff6c" })  -- green
+            vim.api.nvim_set_hl(0, "MiniFilesGitModified", { fg = "#f1ff5e" })  -- yellow
+            vim.api.nvim_set_hl(0, "MiniFilesGitDeleted",  { fg = "#ff6e5e" })  -- red
+            vim.api.nvim_set_hl(0, "MiniFilesGitUntracked",{ fg = "#bd5eff" })  -- magenta
+            vim.api.nvim_set_hl(0, "MiniFilesGitRenamed",  { fg = "#5ef1ff" })  -- cyan
+            vim.api.nvim_set_hl(0, "MiniFilesGitConflict", { fg = "#ffbd5e" })  -- orange
+            vim.api.nvim_set_hl(0, "MiniFilesGitIgnored",  { fg = "#3c4048" })  -- grey dim
 
-            -- Toggle sidebar (preview handled by Telescope file browser now)
-            vim.keymap.set("n", "<C-n>", ":Neotree toggle<CR>", {
-                desc = "Toggle Neo-tree sidebar",
-                noremap = true,
-                silent = true
+            -- Map de símbolos git → highlight group
+            local git_status_map = {
+                [" M"] = "MiniFilesGitModified",  ["M "] = "MiniFilesGitModified",
+                ["MM"] = "MiniFilesGitModified",  ["AM"] = "MiniFilesGitModified",
+                ["A "] = "MiniFilesGitAdded",     ["AA"] = "MiniFilesGitAdded",
+                ["D "] = "MiniFilesGitDeleted",   [" D"] = "MiniFilesGitDeleted",
+                ["DD"] = "MiniFilesGitDeleted",
+                ["R "] = "MiniFilesGitRenamed",
+                ["??"] = "MiniFilesGitUntracked",
+                ["!!"] = "MiniFilesGitIgnored",
+                ["UU"] = "MiniFilesGitConflict",  ["AU"] = "MiniFilesGitConflict",
+                ["UA"] = "MiniFilesGitConflict",
+            }
+
+            -- Cache de git status por directorio (se refresca al abrir mini.files)
+            local git_cache = {}
+
+            local function update_git_cache(cwd)
+                git_cache = {}
+                local cmd = { "git", "-C", cwd, "status", "--porcelain", "-u" }
+                local result = vim.system(cmd, { text = true }):wait()
+                if result.code ~= 0 then return end
+
+                -- Obtener la raíz del repo para paths absolutos
+                local root_result = vim.system(
+                    { "git", "-C", cwd, "rev-parse", "--show-toplevel" },
+                    { text = true }
+                ):wait()
+                if root_result.code ~= 0 then return end
+                local git_root = vim.trim(root_result.stdout)
+
+                for line in result.stdout:gmatch("[^\n]+") do
+                    local status = line:sub(1, 2)
+                    local rel_path = line:sub(4)
+                    -- Manejar renamed: "R  old -> new"
+                    local arrow = rel_path:find(" %-> ")
+                    if arrow then rel_path = rel_path:sub(arrow + 4) end
+
+                    local abs_path = git_root .. "/" .. rel_path
+                    git_cache[abs_path] = status
+
+                    -- También marcar directorios padre (para que carpetas se vean coloreadas)
+                    local parent = vim.fn.fnamemodify(abs_path, ":h")
+                    while parent ~= git_root and parent ~= "/" do
+                        if not git_cache[parent .. "/"] then
+                            git_cache[parent .. "/"] = status
+                        end
+                        parent = vim.fn.fnamemodify(parent, ":h")
+                    end
+                end
+            end
+
+            -- Namespace para los highlights de git
+            local ns_git = vim.api.nvim_create_namespace("mini_files_git")
+
+            local function apply_git_highlights(buf_id)
+                vim.api.nvim_buf_clear_namespace(buf_id, ns_git, 0, -1)
+                local lines = vim.api.nvim_buf_get_lines(buf_id, 0, -1, false)
+                for i, line in ipairs(lines) do
+                    -- mini.files muestra líneas como "  filename" o "/ dirname/"
+                    -- Extraer el path real del entry
+                    local entry = MiniFiles.get_fs_entry(buf_id, i)
+                    if entry then
+                        local path = entry.path
+                        -- Para directorios, buscar con trailing slash
+                        local lookup = entry.fs_type == "directory" and (path .. "/") or path
+                        local status = git_cache[lookup] or git_cache[path]
+                        if status then
+                            local hl = git_status_map[status]
+                            if hl then
+                                vim.api.nvim_buf_set_extmark(buf_id, ns_git, i - 1, 0, {
+                                    line_hl_group = hl,
+                                    priority = 1,
+                                })
+                            end
+                        end
+                    end
+                end
+            end
+
+            -- Git legend para el borde inferior de mini.files
+            local git_legend_border = {
+                { " ● ", "MiniFilesGitAdded" },    { "A ", "FloatBorder" },
+                { "● ", "MiniFilesGitModified" },  { "M ", "FloatBorder" },
+                { "● ", "MiniFilesGitDeleted" },   { "D ", "FloatBorder" },
+                { "● ", "MiniFilesGitUntracked" }, { "? ", "FloatBorder" },
+                { "● ", "MiniFilesGitRenamed" },   { "R ", "FloatBorder" },
+                { "● ", "MiniFilesGitConflict" },  { "! ", "FloatBorder" },
+            }
+
+            -- Refrescar cache cuando se abre mini.files
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "MiniFilesExplorerOpen",
+                callback = function()
+                    local cwd = vim.fn.getcwd()
+                    update_git_cache(cwd)
+                end,
             })
 
-            -- leader+e → Telescope file browser (defined in Telescope config)
-
-            -- Focus en el archivo actual
-            vim.keymap.set("n", "<leader>nf", ":Neotree reveal<CR>", {
-                desc = "Neo-tree Reveal current file",
-                noremap = true,
-                silent = true
+            -- Aplicar highlights cuando se muestra un buffer de mini.files
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "MiniFilesBufferCreate",
+                callback = function(args)
+                    local buf_id = args.data.buf_id
+                    -- Aplicar después de que mini.files llene el buffer
+                    vim.schedule(function()
+                        apply_git_highlights(buf_id)
+                    end)
+                end,
             })
 
-            -- Git status
-            vim.keymap.set("n", "<leader>ng", ":Neotree git_status<CR>", {
-                desc = "Neo-tree Git status",
-                noremap = true,
-                silent = true
+            -- Refrescar highlights al navegar entre directorios
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "MiniFilesBufferUpdate",
+                callback = function(args)
+                    local buf_id = args.data.buf_id
+                    vim.schedule(function()
+                        apply_git_highlights(buf_id)
+                    end)
+                end,
             })
 
-            -- Buffers
-            vim.keymap.set("n", "<leader>nb", ":Neotree buffers<CR>", {
-                desc = "Neo-tree Buffers",
-                noremap = true,
-                silent = true
+            -- ── Window styling + git legend en borde ────────────
+            vim.api.nvim_create_autocmd("User", {
+                pattern = "MiniFilesWindowOpen",
+                callback = function(args)
+                    local win_id = args.data.win_id
+                    -- Bordes con color Cyberdream + leyenda git en el footer
+                    vim.api.nvim_win_set_config(win_id, {
+                        border = "rounded",
+                        footer = git_legend_border,
+                        footer_pos = "center",
+                    })
+                end,
             })
+
+            -- <leader>e — Abre mini.files en el directorio del archivo actual
+            vim.keymap.set("n", "<leader>e", function()
+                local buf_name = vim.api.nvim_buf_get_name(0)
+                local path = vim.fn.filereadable(buf_name) == 1 and buf_name or vim.fn.getcwd()
+                mini_files.open(path, false)
+            end, { desc = "File Explorer (mini.files)" })
+
+            -- - (dash) — Abre mini.files en el directorio del archivo actual (como oil.nvim)
+            vim.keymap.set("n", "-", function()
+                local buf_name = vim.api.nvim_buf_get_name(0)
+                local path = vim.fn.filereadable(buf_name) == 1 and buf_name or vim.fn.getcwd()
+                mini_files.open(path, false)
+            end, { desc = "File Explorer (mini.files)" })
+
+            -- <C-n> — Toggle mini.files desde la raíz del proyecto (reemplaza Neo-tree sidebar)
+            vim.keymap.set("n", "<C-n>", function()
+                if not mini_files.close() then
+                    mini_files.open(vim.fn.getcwd(), false)
+                end
+            end, { desc = "Toggle File Explorer" })
         end,
     },
 
@@ -451,8 +407,34 @@ require("lazy").setup({
         },
         config = function()
             require("mason-lspconfig").setup({
-                ensure_installed = { "pyright", "ruff", "lua_ls" },
+                ensure_installed = { "pyright", "ruff", "lua_ls", "gopls" },
                 automatic_installation = true,
+            })
+        end,
+    },
+
+    -- Mason Tool Installer — instala formatters, linters, debuggers automáticamente
+    {
+        "WhoIsSethDaniel/mason-tool-installer.nvim",
+        dependencies = { "williamboman/mason.nvim" },
+        config = function()
+            require("mason-tool-installer").setup({
+                ensure_installed = {
+                    -- Go
+                    "gofumpt",
+                    "goimports-reviser",
+                    "golines",
+                    "delve",
+                    -- Python
+                    "black",
+                    "debugpy",
+                    -- Lua
+                    "stylua",
+                    -- Web
+                    "prettier",
+                },
+                auto_update = false,
+                run_on_start = true,
             })
         end,
     },
@@ -463,6 +445,7 @@ require("lazy").setup({
         dependencies = {
             "williamboman/mason.nvim",
             "williamboman/mason-lspconfig.nvim",
+            "WhoIsSethDaniel/mason-tool-installer.nvim",
         },
         config = function()
             require("config.lsp").setup()
@@ -500,6 +483,7 @@ require("lazy").setup({
                 formatters_by_ft = {
                     python = { "black" },
                     lua = { "stylua" },
+                    go = { "goimports-reviser", "gofumpt", "golines" },
                     javascript = { "prettier" },
                     typescript = { "prettier" },
                     javascriptreact = { "prettier" },
@@ -527,6 +511,11 @@ require("lazy").setup({
                     formatters = { "jq" },
                 })
             end, { desc = "Format JSON (jq)" })
+
+            -- Custom formatter: golines (corta líneas largas en Go)
+            require("conform").formatters.golines = {
+                prepend_args = { "--max-len=120", "--base-formatter=gofumpt" },
+            }
 
             -- Custom formatter: jq minify (compact output)
             require("conform").formatters.jq_minify = {
@@ -561,6 +550,7 @@ require("lazy").setup({
                     "python", "lua", "bash", "json",
                     "yaml", "markdown", "javascript",
                     "typescript", "html", "css", "tsx",
+                    "go", "gomod", "gosum", "gowork",
                 },
             })
         end,
@@ -666,7 +656,7 @@ require("lazy").setup({
             "nvim-lua/plenary.nvim",
             "nvim-telescope/telescope-fzf-native.nvim",     -- Búsqueda más rápida
             "nvim-telescope/telescope-live-grep-args.nvim", -- Grep con argumentos
-            "nvim-telescope/telescope-file-browser.nvim",   -- Explorador con preview
+
         },
         config = function()
             local telescope = require("telescope")
@@ -776,19 +766,7 @@ require("lazy").setup({
                         override_file_sorter = true,
                         case_mode = "smart_case",
                     },
-                    file_browser = {
-                        theme = "ivy",
-                        hijack_netrw = false,
-                        hidden = true,
-                        respect_gitignore = true,
-                        grouped = true,
-                        previewer = true,
-                        initial_mode = "normal",
-                        layout_config = {
-                            height = 0.6,
-                            preview_width = 0.55,
-                        },
-                    },
+
                 },
             })
 
@@ -796,7 +774,7 @@ require("lazy").setup({
             telescope.load_extension("fzf")
             telescope.load_extension("noice")        -- Integración con noice
             telescope.load_extension("aerial")       -- Integración con aerial
-            telescope.load_extension("file_browser") -- Explorador de archivos con preview
+
 
             -- ============================================
             -- KEYMAPS DE TELESCOPE
@@ -894,17 +872,7 @@ require("lazy").setup({
                 desc = "Noice messages"
             })
 
-            -- FILE BROWSER (reemplaza Neo-tree float — preview siempre visible)
-            vim.keymap.set("n", "<leader>e", function()
-                require("telescope").extensions.file_browser.file_browser({
-                    path = "%:p:h",
-                    select_buffer = true,
-                    previewer = true,
-                    initial_mode = "normal",
-                })
-            end, {
-                desc = "File Browser (preview)",
-            })
+            -- leader+e → mini.files (definido en mini.files config)
         end,
     },
 
@@ -922,6 +890,7 @@ require("lazy").setup({
         "mfussenegger/nvim-dap",
         dependencies = {
             "mfussenegger/nvim-dap-python",
+            "leoluz/nvim-dap-go",             -- Delve integration para Go
             "rcarriga/nvim-dap-ui",
             "nvim-neotest/nvim-nio",
         },
@@ -957,6 +926,15 @@ require("lazy").setup({
             -- Configurar DAP para Python
             require("dap-python").setup("python") -- Usa el python del sistema/virtualenv
 
+            -- Configurar DAP para Go (Delve)
+            require("dap-go").setup({
+                -- Delve configuration
+                delve = {
+                    detached = vim.fn.has("win32") == 0, -- Detached en Unix, attached en Windows
+                    port = "${port}",                     -- Puerto dinámico
+                },
+            })
+
             -- Abrir/cerrar UI automáticamente
             dap.listeners.after.event_initialized["dapui_config"] = function()
                 dapui.open()
@@ -985,6 +963,14 @@ require("lazy").setup({
             vim.keymap.set("n", "<leader>dc", dap.continue, { desc = "Continue" })
             vim.keymap.set("n", "<leader>dt", dap.terminate, { desc = "Terminate" })
             vim.keymap.set("n", "<leader>du", dapui.toggle, { desc = "Toggle Debug UI" })
+
+            -- Go-specific debug keymaps
+            vim.keymap.set("n", "<leader>dgt", function()
+                require("dap-go").debug_test()
+            end, { desc = "Debug Go Test (nearest)" })
+            vim.keymap.set("n", "<leader>dgl", function()
+                require("dap-go").debug_last()
+            end, { desc = "Debug Last Go Test" })
         end,
     },
 
@@ -1386,10 +1372,10 @@ require("lazy").setup({
                 { "<leader>m",        group = "multi-cursor" },
                 { "<leader>x",        group = "diagnostics" },
                 { "<leader>d",        group = "debug" },
+                { "<leader>dg",       group = "debug go" },
                 { "<leader>w",        group = "workspace" },
                 { "<leader>s",        group = "symbols" },
                 { "<leader>l",        group = "lsp" },
-                { "<leader>n",        group = "neo-tree" },
 
                 -- Navegación (ya están definidos en la config, solo los documentamos)
                 { "]h",               desc = "Next git hunk" },
@@ -1406,7 +1392,7 @@ require("lazy").setup({
                 { "<leader>[",        desc = "Previous symbol" },
 
                 -- Atajos con Ctrl (documentar los existentes)
-                { "<C-n>",            desc = "Toggle Neo-tree" },
+                { "<C-n>",            desc = "Toggle File Explorer" },
                 { "<C-p>",            desc = "Find files (Telescope)" },
                 { "<C-f>",            desc = "Search text in files" },
 
@@ -1429,8 +1415,8 @@ require("lazy").setup({
                 -- Aerial (símbolos)
                 { "<leader>a",        desc = "Toggle Aerial" },
 
-                -- File Browser con preview (Telescope)
-                { "<leader>e",        desc = "File Browser (preview)" },
+                -- File Explorer con preview (mini.files)
+                { "<leader>e",        desc = "File Explorer (mini.files)" },
             })
         end,
     },
