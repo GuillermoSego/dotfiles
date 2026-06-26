@@ -1,3 +1,6 @@
+-- Agregar node/npm al PATH para que nvim-treesitter pueda compilar parsers
+vim.env.PATH = vim.env.HOME .. "/.nvm/versions/node/v24.15.0/bin:" .. vim.env.PATH
+
 -- Número de línea y estilo
 vim.opt.number = true
 vim.opt.relativenumber = false
@@ -20,6 +23,12 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
   })
 end
 vim.opt.rtp:prepend(lazypath)
+
+-- Folding con Treesitter
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
 
 -- Configuración keymaps
 vim.keymap.set("n", "<leader>ns", ":nohlsearch<CR>", { noremap = true, silent = true })

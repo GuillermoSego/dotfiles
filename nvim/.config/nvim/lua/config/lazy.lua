@@ -546,11 +546,15 @@ require("lazy").setup({
             -- nvim-treesitter: only manage parser installation
             -- Neovim 0.12+ enables treesitter highlight/indent natively
             require("nvim-treesitter").setup({
+                prefer_git = true,
                 ensure_installed = {
                     "python", "lua", "bash", "json",
-                    "yaml", "markdown", "javascript",
+                    "yaml", "markdown", "markdown_inline", "javascript",
                     "typescript", "html", "css", "tsx",
                     "go", "gomod", "gosum", "gowork",
+                },
+                highlight = {
+                    enable = true,  -- activa injections (colores en code blocks de markdown)
                 },
             })
         end,
@@ -1419,5 +1423,30 @@ require("lazy").setup({
                 { "<leader>e",        desc = "File Explorer (mini.files)" },
             })
         end,
+    },
+
+    -- ============================================
+    -- MARKDOWN
+    -- ============================================
+
+    {
+        "MeanderingProgrammer/render-markdown.nvim",
+        dependencies = {
+            "nvim-treesitter/nvim-treesitter",
+            "nvim-tree/nvim-web-devicons",
+        },
+        ft = { "markdown" },
+        opts = {
+            render_modes = { "n", "c" },
+            heading = { enabled = true },
+            code = { enabled = true },
+            bullet = { enabled = true },
+            checkbox = { enabled = true },
+            table = { enabled = true },
+            link = { enabled = true },
+        },
+        keys = {
+            { "<leader>tm", "<cmd>RenderMarkdown toggle<cr>", ft = "markdown", desc = "Toggle Markdown render" },
+        },
     },
 })
