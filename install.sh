@@ -29,11 +29,13 @@ link "nvim/.config/nvim" "$HOME/.config/nvim"
 link "zsh/.zshrc"        "$HOME/.zshrc"
 link "tmux/.tmux.conf"   "$HOME/.tmux.conf"
 
-# asegurar que el script original tenga permisos de ejecución
+# asegurar que los scripts tengan permisos de ejecución
 chmod +x "$REPO_DIR/tmux/tmux-copy"
+chmod +x "$REPO_DIR/tmux/tmux-sessionizer"
 
-# crear symlink en ~/bin
+# crear symlinks en ~/bin
 link "tmux/tmux-copy" "$HOME/bin/tmux-copy"
+link "tmux/tmux-sessionizer" "$HOME/bin/tmux-sessionizer"
 
 echo "[✓] Dotfiles instalados."
 [ -d "$BACKUP_DIR" ] && echo "    Backups guardados en $BACKUP_DIR"

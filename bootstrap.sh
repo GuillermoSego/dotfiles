@@ -229,11 +229,15 @@ install_plugins_headless() {
     info "Installing Neovim plugins (lazy.nvim sync)"
     nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
 
-    info "Installing Mason packages"
-    nvim --headless "+MasonInstall pyright ruff lua-language-server" +qa 2>/dev/null || true
+    # mason-tool-installer runs on start and installs all ensure_installed tools
+    # (LSP servers, formatters, debuggers) — just need a brief headless session
+    info "Installing Mason packages (LSP servers, formatters, debuggers)"
+    nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
 
     info "Installing Treesitter parsers"
-    nvim --headless "+TSInstall python lua bash json yaml markdown javascript" +qa 2>/dev/null || true
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+    nvim --headless "+TSInstall python lua bash json yaml markdown markdown_inline javascript typescript html css tsx go gomod gosum gowork" +qa 2>/dev/null || true
 
     ok "Headless plugin installs done"
 }

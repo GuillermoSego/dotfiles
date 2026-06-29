@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# tmux-sessionizer — Cyberdream-themed session manager
+# Usage: tmux-sessionizer [switch|kill|rename|windows]
+set -euo pipefail
+
+# ── Cyberdream fzf colors ────────────────────────────────────
+CYBER_FZF="--color=bg:#16181a,bg+:#1e2124,fg:#7b8496,fg+:#ffffff"
+CYBER_FZF+=",hl:#5ea1ff,hl+:#5ef1ff,info:#f1ff5e,prompt:#5ea1ff"
+CYBER_FZF+=",pointer:#ff6e5e,marker:#5eff6c,spinner:#bd5eff,header:#5ef1ff"
+CYBER_FZF+=",border:#3c4048,gutter:#16181a"
+
+ACTION="${1:-switch}"
+
+# ── Helper: list sessions in tab-delimited format ────────────
+# Format: session_name<TAB>display_string
+# {1} always = session_name, {2..} = display
+_list_sessions() {
+    tmux list-sessions -F '#{session_name}' 2>/dev/null | while IFS= read -r name; do
+        attached=""
+        windows=$(tmux display-message -p -t "$name" '#{session_windows}' 2>/dev/null || echo "?")
+        if tmux list-clients -t "$name" 2>/dev/null | grep -q .; then
+            attached="● "
+        else
+            attached="  "
+        fi
+        printf '%s\t%s%s  (%sw)\n' "$name" "$attached" "$name" "$windows"
+    done
+}
+
+# ── Helper: reload command for fzf ───────────────────────────
+RELOAD_CMD="tmux-sessionizer _list"
+
+case "$ACTION" in
+  _list)
+    # Internal: called by fzf reload
+    _list_sessions
+    ;;
+
+  switch)
+    # ── Session switcher ──────────────────────────────────────
+    selected=$(_list_sessions | \
+      fzf --reverse --no-sort --delimiter='\t' --with-nth=2 \
+          $CYBER_FZF \
+          --border=rounded --border-label=' Sessions ' --border-label-pos=3 \
+          --prompt='  ' \
+          --pointer='▶' --marker='✓' \
+          --header='enter=switch │ ctrl-x=kill │ ctrl-r=rename │ ctrl-n=new' \
+          --bind='j:down,k:up' \
+          --bind='ctrl-d:half-page-down,ctrl-u:half-page-up' \
+          --bind="ctrl-x:execute-silent(tmux kill-session -t {1})+reload($RELOAD_CMD)" \
+          --bind="ctrl-r:execute(printf 'New name: ' >/dev/tty && read -r name </dev/tty && [ -n \"\$name\" ] && tmux rename-session -t {1} \"\$name\")+reload($RELOAD_CMD)" \
+          --bind="ctrl-n:execute(printf 'Session name: ' >/dev/tty && read -r name </dev/tty && [ -n \"\$name\" ] && tmux new-session -d -s \"\$name\")+reload($RELOAD_CMD)" \
+          --preview='tmux capture-pane -ep -t {1} 2>/dev/null || echo "No preview"' \
+          --preview-window=right:60%:wrap) || exit 0
+
+    session_name=$(echo "$selected" | cut -f1)
+    [ -n "$session_name" ] && tmux switch-client -t "$session_name"
+    ;;
+
+  windows)
+    # ── Window switcher ───────────────────────────────────────
+    # Format: target<TAB>display_string
+    selected=$(tmux list-windows -a -F '#{session_name}:#{window_index}\t#{session_name}:#{window_index}  #{window_name}  #{?window_active,●,○}' 2>/dev/null | \
+      fzf --reverse --no-sort --delimiter='\t' --with-nth=2 \
+          $CYBER_FZF \
+          --border=rounded --border-label=' Windows ' --border-label-pos=3 \
+          --prompt='  ' \
+          --pointer='▶' \
+          --header='enter=switch │ j/k=navigate' \
+          --bind='j:down,k:up' \
+          --bind='ctrl-d:half-page-down,ctrl-u:half-page-up' \
+          --preview='tmux capture-pane -ep -t {1} 2>/dev/null || echo "No preview"' \
+          --preview-window=right:60%:wrap) || exit 0
+
+    target=$(echo "$selected" | cut -f1)
+    [ -n "$target" ] && tmux switch-client -t "$target"
+    ;;
+
+  kill)
+    # ── Kill sessions (multi-select) ──────────────────────────
+    selected=$(_list_sessions | \
+      fzf --reverse --multi --no-sort --delimiter='\t' --with-nth=2 \
+          $CYBER_FZF \
+          --border=rounded --border-label=' Kill Sessions ' --border-label-pos=3 \
+          --prompt=' 󰗨 ' \
+          --pointer='▶' --marker='✗' \
+          --header='tab=select │ enter=kill selected │ j/k=navigate' \
+          --bind='j:down,k:up' \
+          --bind='ctrl-d:half-page-down,ctrl-u:half-page-up' \
+          --preview='tmux capture-pane -ep -t {1} 2>/dev/null || echo "No preview"' \
+          --preview-window=right:60%:wrap) || exit 0
+
+    echo "$selected" | while IFS= read -r line; do
+      session_name=$(echo "$line" | cut -f1)
+      [ -n "$session_name" ] && tmux kill-session -t "$session_name" 2>/dev/null || true
+    done
+    ;;
+
+  rename)
+    # ── Rename current session ────────────────────────────────
+    current=$(tmux display-message -p '#S')
+    printf "Rename '%s' to: " "$current"
+    read -r new_name
+    [ -n "$new_name" ] && tmux rename-session "$new_name"
+    ;;
+esac
