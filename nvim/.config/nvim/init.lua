@@ -1,6 +1,9 @@
 -- Agregar node/npm al PATH para que nvim-treesitter pueda compilar parsers
 vim.env.PATH = vim.env.HOME .. "/.nvm/versions/node/v24.15.0/bin:" .. vim.env.PATH
 
+-- Color verdadero (necesario para que Cyberdream se vea correctamente)
+vim.opt.termguicolors = true
+
 -- Número de línea y estilo
 vim.opt.number = true
 vim.opt.relativenumber = false
