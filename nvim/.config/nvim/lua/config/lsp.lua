@@ -114,12 +114,13 @@ local tint_colors = {
     Ok    = "#16221a",
 }
 
--- Terminal.app no soporta undercurl (`CSI 4:3 m`) ni color de subrayado
--- (`CSI 58 ...`). tmux.conf los anuncia vía Smulx/Setulc, así que Neovim los
--- emite y Terminal.app los dibuja mal, tapando el texto. Con `false` usamos
--- subrayado plano, soportado en todas partes. Ponlo en `true` si cambias a
--- Ghostty / iTerm2 / kitty / WezTerm.
-local has_undercurl = false
+-- Rama linux/WSL: los terminales habituales aquí (Windows Terminal, GNOME
+-- Terminal, Konsole, Alacritty, kitty, WezTerm) sí implementan subparámetros
+-- SGR con `:`, así que undercurl (`CSI 4:3 m`) y color de subrayado
+-- (`CSI 58 ...`) funcionan, y tmux.conf mantiene los overrides Smulx/Setulc.
+-- En main está en `false` porque Terminal.app de macOS no los soporta y los
+-- dibuja encima del código; ahí se usa el tinte de fondo de `tint_colors`.
+local has_undercurl = true
 
 local function dim_diagnostic_highlights()
     for level, color in pairs(dim_colors) do
