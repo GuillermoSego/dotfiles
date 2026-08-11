@@ -1,6 +1,11 @@
 -- ~/.config/nvim/lua/config/lsp.lua
 local M = {}
 
+-- Opciones compartidas para las ventanas flotantes de hover/signature help.
+-- En Nvim 0.12 `vim.lsp.with()` fue removido: el borde se pasa directo a
+-- `vim.lsp.buf.hover()` / `vim.lsp.buf.signature_help()`.
+M.float_opts = { border = "rounded" }
+
 -- ============================================
 -- CONFIGURACIÓN DE KEYMAPS LSP
 -- ============================================
@@ -24,8 +29,11 @@ M.on_attach = function(client, bufnr)
 
     -- ===== INFORMACIÓN =====
     -- K is mapped by nvim-ufo with fallback to hover, so we skip it here
-    map("n", "<C-k>", vim.lsp.buf.signature_help, "Show signature help")
-    map("i", "<C-k>", vim.lsp.buf.signature_help, "Show signature help")
+    local function signature_help()
+        vim.lsp.buf.signature_help(M.float_opts)
+    end
+    map("n", "<C-k>", signature_help, "Show signature help")
+    map("i", "<C-k>", signature_help, "Show signature help")
 
     -- ===== REFACTORING =====
     map("n", "<leader>rn", vim.lsp.buf.rename, "Rename symbol")
@@ -85,51 +93,101 @@ end
 -- ============================================
 -- CONFIGURACIÓN DE DIAGNÓSTICOS
 -- ============================================
+-- Colores atenuados para el texto virtual: mantienen el matiz Cyberdream
+-- pero mezclados con el fondo para que no compitan con el código resaltado.
+local dim_colors = {
+    Error = "#a15a52",
+    Warn  = "#9a9a52",
+    Info  = "#4e8996",
+    Hint  = "#4e8f61",
+    Ok    = "#4e8f61",
+}
+
+-- Tinte de fondo sobre el token marcado: el color del editor (#16181a) con un
+-- ~10% del matiz de la severidad. Terminal.app sí dibuja fondos de 24 bits con
+-- precisión, así que estos valores llegan exactos y no aproximados.
+local tint_colors = {
+    Error = "#2a1c1c",
+    Warn  = "#262417",
+    Info  = "#16222a",
+    Hint  = "#16221a",
+    Ok    = "#16221a",
+}
+
+-- Terminal.app no soporta undercurl (`CSI 4:3 m`) ni color de subrayado
+-- (`CSI 58 ...`). tmux.conf los anuncia vía Smulx/Setulc, así que Neovim los
+-- emite y Terminal.app los dibuja mal, tapando el texto. Con `false` usamos
+-- subrayado plano, soportado en todas partes. Ponlo en `true` si cambias a
+-- Ghostty / iTerm2 / kitty / WezTerm.
+local has_undercurl = false
+
+local function dim_diagnostic_highlights()
+    for level, color in pairs(dim_colors) do
+        -- Texto virtual al final de la línea: tenue, sin fondo.
+        vim.api.nvim_set_hl(0, "DiagnosticVirtualText" .. level, {
+            fg = color,
+            bg = "NONE",
+            italic = true,
+        })
+        -- Marca sobre el token. Nunca se define `fg` aquí: así el color de
+        -- Treesitter sobrevive y el código sigue legible.
+        if has_undercurl then
+            vim.api.nvim_set_hl(0, "DiagnosticUnderline" .. level, {
+                undercurl = true,
+                sp = color,
+            })
+        else
+            vim.api.nvim_set_hl(0, "DiagnosticUnderline" .. level, {
+                bg = tint_colors[level],
+            })
+        end
+    end
+
+    -- Ruff/Pyright marcan casi todo con el tag `unnecessary`, y Nvim pinta
+    -- DiagnosticUnnecessary encima del token con prioridad 152, por encima de
+    -- Treesitter (100). Si el grupo define `fg`, repinta la palabra de gris y
+    -- tapa el resaltado de sintaxis. Sin `fg` los atributos se combinan: el
+    -- token conserva su color y solo se marca en cursiva.
+    vim.api.nvim_set_hl(0, "DiagnosticUnnecessary", { italic = true })
+
+    -- Mismo motivo: que "deprecated" tache el texto sin recolorearlo.
+    vim.api.nvim_set_hl(0, "DiagnosticDeprecated", { strikethrough = true })
+end
+
 M.setup_diagnostics = function()
     -- Configuración global de diagnósticos
     vim.diagnostic.config({
         virtual_text = {
             prefix = "●",
             source = "if_many", -- Mostrar fuente si hay múltiples
+            spacing = 4,
         },
-        signs = true,
+        signs = {
+            text = {
+                [vim.diagnostic.severity.ERROR] = "",
+                [vim.diagnostic.severity.WARN]  = "",
+                [vim.diagnostic.severity.HINT]  = "",
+                [vim.diagnostic.severity.INFO]  = "",
+            },
+        },
         underline = true,
         update_in_insert = false, -- No actualizar en modo insert
         severity_sort = true,     -- Ordenar por severidad
         float = {
             border = "rounded",
-            source = "always",
+            source = true,
             header = "",
             prefix = "",
         },
     })
 
-    -- Símbolos en el gutter
-    local signs = {
-        { name = "DiagnosticSignError", text = "" },
-        { name = "DiagnosticSignWarn",  text = "" },
-        { name = "DiagnosticSignHint",  text = "" },
-        { name = "DiagnosticSignInfo",  text = "" },
-    }
-
-    for _, sign in ipairs(signs) do
-        vim.fn.sign_define(sign.name, {
-            texthl = sign.name,
-            text = sign.text,
-            numhl = ""
-        })
-    end
-
-    -- Handlers para ventanas flotantes con bordes redondeados
-    vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(
-        vim.lsp.handlers.hover,
-        { border = "rounded" }
-    )
-
-    vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(
-        vim.lsp.handlers.signature_help,
-        { border = "rounded" }
-    )
+    -- Aplicar ahora y re-aplicar cada vez que cambie el colorscheme,
+    -- porque el tema restablece los grupos Diagnostic*.
+    dim_diagnostic_highlights()
+    vim.api.nvim_create_autocmd("ColorScheme", {
+        group = vim.api.nvim_create_augroup("DimDiagnostics", { clear = true }),
+        callback = dim_diagnostic_highlights,
+    })
 end
 
 -- ============================================
