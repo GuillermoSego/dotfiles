@@ -111,3 +111,4 @@ for _cmd in nvm node npm npx yarn pnpm; do
     eval "${_cmd}() { _nvm_lazy_load; ${_cmd} \"\$@\"; }"
 done
 unset _cmd
+export PATH="$HOME/.local/bin:$PATH"
