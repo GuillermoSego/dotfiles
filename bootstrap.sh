@@ -37,7 +37,7 @@ install_brew_packages() {
     info "Phase 2: Brew packages"
     local pkgs=(
         neovim tmux fzf htop jq ripgrep fd
-        python3 curl wget git lazygit go
+        python3 curl wget git lazygit go herdr
     )
     local to_install=()
     for pkg in "${pkgs[@]}"; do
@@ -251,6 +251,23 @@ install_plugins_headless() {
     ok "Headless plugin installs done"
 }
 
+# ── Phase 12: Herdr ↔ Claude Code integration ────────────────
+# Escribe el hook SessionStart en ~/.claude/settings.json (fuera del repo)
+# para que herdr detecte el estado de cada agente y restaure sesiones.
+install_herdr_integration() {
+    info "Phase 12: Herdr integration (Claude Code)"
+    if ! has herdr; then
+        warn "herdr not found, skipping integration"
+        return
+    fi
+    if herdr integration status 2>/dev/null | grep -q '^claude: current'; then
+        ok "herdr claude integration already installed"
+        return
+    fi
+    herdr integration install claude || warn "herdr integration install claude failed"
+    ok "herdr claude integration ready"
+}
+
 # ── Main ──────────────────────────────────────────────────────
 main() {
     echo ""
@@ -270,6 +287,7 @@ main() {
     run_install_script
     set_default_shell
     install_plugins_headless
+    install_herdr_integration
 
     echo ""
     ok "Bootstrap complete! Open a new terminal to start using zsh."

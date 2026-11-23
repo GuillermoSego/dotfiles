@@ -1,0 +1,102 @@
+onboarding = false
+# ╔══════════════════════════════════════════════════════════════╗
+# ║                   HERDR CONFIG — Memo                       ║
+# ║        Multiplexor de agentes (Claude Code & co.)           ║
+# ╚══════════════════════════════════════════════════════════════╝
+#
+# Referencia completa:  herdr --default-config
+# Aplicar cambios:      prefix + shift+r   (o `herdr server reload-config`)
+# Valores inválidos caen a su default y herdr muestra un warning al arrancar.
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ⌨️  Keys — alineadas con tmux/.tmux.conf
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[keys]
+# Mismo prefix que tmux. Pensado para correr herdr FUERA de tmux (en su
+# propia pestaña de Terminal). Si lo corres DENTRO de tmux, tmux se come
+# Ctrl+Space: cambia esto a "ctrl+b" (tmux lo tiene unbound y pasa directo).
+prefix = "ctrl+space"
+
+# Splits como en tmux (prefix | y prefix -), conservando los defaults.
+split_vertical   = ["prefix+v", "prefix+|"]
+split_horizontal = ["prefix+minus"]
+
+# prefix h/j/k/l (foco), shift+h/j/k/l (swap), z (zoom), x (cerrar),
+# c (nuevo tab), [ (copy mode) ya coinciden con tmux por default.
+last_pane = ["prefix+semicolon"]
+
+# Picker de agentes en prefix a (prefix g queda para lazygit, como en tmux).
+# Dentro del picker, b filtra los agentes blocked.
+goto = ["prefix+a"]
+
+# Saltar entre agentes sin abrir el picker
+next_agent     = ["prefix+period"]
+previous_agent = ["prefix+comma"]
+
+# Lazygit en popup sobre el layout actual (igual que prefix g en tmux).
+# Sale con q.
+[[keys.command]]
+key     = "prefix+g"
+type    = "popup"
+command = "lazygit"
+width   = "90%"
+height  = "90%"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🎨  Theme — Cyberdream (misma paleta que tmux/nvim)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[theme]
+name = "catppuccin"
+
+auto_switch = false
+[theme.custom]
+accent        = "#5ef1ff"
+panel_bg      = "reset"
+sidebar_bg    = "#16181a"
+active_row_bg = "#1e2124"
+selection_bg  = "#3c4048"
+surface0      = "#1e2124"
+surface1      = "#3c4048"
+surface_dim   = "#16181a"
+overlay0      = "#7b8496"
+overlay1      = "#7b8496"
+text          = "#ffffff"
+subtext0      = "#7b8496"
+mauve         = "#bd5eff"
+green         = "#5eff6c"
+yellow        = "#f1ff5e"
+red           = "#ff6e5e"
+blue          = "#5ea1ff"
+teal          = "#5ef1ff"
+peach         = "#ffbd5e"
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 🖥️  UI
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ui]
+tab_bar_position = "bottom"     # tabs abajo, como la status bar de tmux
+agent_panel_sort = "priority"   # los agentes blocked/done primero
+tab_bar_right = [
+  { type = "zoom" },
+  { type = "datetime", format = "%H:%M" },
+  { type = "hostname" },
+]
+tab_bar_right_separator = " │ "
+
+# Notificación del sistema cuando un agente en background termina o te necesita
+[ui.toast]
+delivery = "system"
+delay_seconds = 1
+
+[ui.sound]
+enabled = true
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 💾  Session — reanuda conversaciones de Claude tras reinicio
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Requiere: herdr integration install claude
+[session]
+resume_agents_on_restore = true
+
+[advanced]
+scrollback_limit_bytes = 50000000   # ~ history-limit generoso de tmux

@@ -23,6 +23,10 @@ echo "[*] Removing symlinks created by dotfiles"
 remove_link "$HOME/.zshrc"
 remove_link "$HOME/.tmux.conf"
 remove_link "$HOME/.config/nvim"
+remove_link "$HOME/.config/herdr/config.toml"
+for skill in "$REPO_DIR"/claude/.claude/skills/*/; do
+  remove_link "$HOME/.claude/skills/$(basename "$skill")"
+done
 remove_link "$HOME/bin/tmux-copy"
 remove_link "$HOME/bin/tmux-sessionizer"
 
