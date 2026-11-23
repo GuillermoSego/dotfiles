@@ -432,6 +432,8 @@ require("lazy").setup({
                     "stylua",
                     -- Web
                     "prettier",
+                    -- SQL
+                    "sql-formatter",
                 },
                 auto_update = false,
                 run_on_start = true,
@@ -476,10 +478,18 @@ require("lazy").setup({
         "stevearc/conform.nvim",
         config = function()
             require("conform").setup({
-                format_on_save = {
-                    timeout_ms = 1000,
-                    lsp_format = "fallback",
-                },
+                -- SQL queda fuera del formateo automático: los buffers de query
+                -- de dadbod-ui son filetype sql y no deben reformatearse al guardar.
+                format_on_save = function(bufnr)
+                    local ft = vim.bo[bufnr].filetype
+                    if ft == "sql" or ft == "mysql" or ft == "plsql" then
+                        return nil
+                    end
+                    return {
+                        timeout_ms = 1000,
+                        lsp_format = "fallback",
+                    }
+                end,
                 formatters_by_ft = {
                     python = { "black" },
                     lua = { "stylua" },
@@ -493,6 +503,7 @@ require("lazy").setup({
                     yaml = { "prettier" },
                     markdown = { "prettier" },
                     json = { "jq" },
+                    sql = { "sql_formatter" },
                 },
             })
 
@@ -515,6 +526,11 @@ require("lazy").setup({
             -- Custom formatter: golines (corta líneas largas en Go)
             require("conform").formatters.golines = {
                 prepend_args = { "--max-len=120", "--base-formatter=gofumpt" },
+            }
+
+            -- Custom formatter: sql-formatter con dialecto Redshift
+            require("conform").formatters.sql_formatter = {
+                prepend_args = { "-l", "redshift" },
             }
 
             -- Custom formatter: jq minify (compact output)
@@ -552,6 +568,7 @@ require("lazy").setup({
                     "yaml", "markdown", "markdown_inline", "javascript",
                     "typescript", "html", "css", "tsx",
                     "go", "gomod", "gosum", "gowork",
+                    "sql",
                 },
                 highlight = {
                     enable = true,  -- activa injections (colores en code blocks de markdown)
@@ -646,6 +663,92 @@ require("lazy").setup({
                     { name = "buffer" },
                     { name = "path" },
                 }),
+            })
+        end,
+    },
+
+    -- ============================================
+    -- BASE DE DATOS (SQL)
+    -- ============================================
+
+    -- vim-dadbod — cliente SQL dentro de Neovim.
+    -- Conexiones: se agregan con `A` en el drawer y se guardan en
+    -- ~/.local/share/nvim/db_ui/connections.json (fuera del repo, nunca en git).
+    {
+        "kristijanhusak/vim-dadbod-ui",
+        dependencies = {
+            { "tpope/vim-dadbod",                     lazy = true }, -- motor
+            { "kristijanhusak/vim-dadbod-completion", ft = { "sql", "mysql", "plsql" }, lazy = true },
+        },
+        cmd = { "DBUI", "DBUIToggle", "DBUIAddConnection", "DBUIFindBuffer" },
+        ft = { "sql", "mysql", "plsql" }, -- para que <leader><CR> exista en cualquier .sql
+        init = function()
+            -- Las globales deben existir ANTES de que el plugin cargue
+            vim.g.db_ui_save_location = vim.fn.stdpath("data") .. "/db_ui"
+            vim.g.db_ui_use_nerd_fonts = 1
+            vim.g.db_ui_win_position = "left"
+            vim.g.db_ui_winwidth = 40
+
+            -- Scratch queries fuera de db_ui_save_location: no son queries
+            -- guardadas, pero sobreviven al reinicio (cache, desechable) y el
+            -- drawer las vuelve a listar bajo su conexión.
+            vim.g.db_ui_tmp_query_location = vim.fn.stdpath("cache") .. "/db_ui_queries"
+
+            -- Guardar NO ejecuta la query; se ejecuta explícitamente con <leader>S.
+            -- Evita lanzar queries pesadas a Redshift por reflejo de guardar.
+            vim.g.db_ui_execute_on_save = 0
+
+            -- OBLIGATORIO para Redshift: la variante por defecto hace
+            -- UNION ALL sobre pg_matviews, tabla que no existe en Redshift
+            -- (motor forkeado de PostgreSQL 8.0.2) y rompe el drawer.
+            vim.g.db_ui_use_postgres_views = 0
+
+            -- Helpers de tabla contra las vistas de sistema de Redshift.
+            -- `\d` de psql no sirve aquí (falla por incompatibilidad de catálogo).
+            vim.g.db_ui_table_helpers = {
+                postgresql = {
+                    Columns = "SELECT ordinal_position, column_name, data_type, is_nullable, column_default "
+                        .. "FROM svv_columns WHERE table_schema='{schema}' AND table_name='{table}' "
+                        .. "ORDER BY ordinal_position;",
+                    -- diststyle/sortkey: por qué una query va lenta en Redshift
+                    Info = "SELECT \"schema\", \"table\", size, tbl_rows, diststyle, sortkey1, encoded, unsorted "
+                        .. "FROM svv_table_info WHERE \"schema\"='{schema}' AND \"table\"='{table}';",
+                    Count = "SELECT count(*) FROM {optional_schema}{table};",
+                    ["Sample 100"] = "SELECT * FROM {optional_schema}{table} LIMIT 100;",
+                },
+            }
+        end,
+        keys = {
+            { "<leader>Du", "<cmd>DBUIToggle<cr>",        desc = "Toggle DB UI" },
+            { "<leader>Da", "<cmd>DBUIAddConnection<cr>", desc = "Add DB connection" },
+            { "<leader>Df", "<cmd>DBUIFindBuffer<cr>",    desc = "Find DB buffer" },
+            {
+                "<leader>Dq",
+                function()
+                    require("config.sql").new_query()
+                end,
+                desc = "New query scratch",
+            },
+        },
+        config = function()
+            -- Autocompletado de tablas/columnas + atajos de ejecución en SQL.
+            -- cmp.setup.buffer es aditivo: no toca el cmp.setup() global.
+            vim.api.nvim_create_autocmd("FileType", {
+                -- dbout = buffers de resultados que abre dadbod-ui al ejecutar una
+                -- query; sin esto nunca reciben <leader>Dd y :bd exige !.
+                pattern = { "sql", "mysql", "plsql", "dbout" },
+                callback = function(args)
+                    local ft = args.match
+                    if ft ~= "dbout" then
+                        require("cmp").setup.buffer({
+                            sources = {
+                                { name = "vim-dadbod-completion" },
+                                { name = "buffer" },
+                            },
+                        })
+                    end
+                    require("config.sql").attach({ exec = ft ~= "dbout" })
+                end,
             })
         end,
     },
@@ -748,11 +851,16 @@ require("lazy").setup({
                         theme = "dropdown",
                         previewer = false,
                         mappings = {
+                            -- delete_buffer solo fuerza el borrado en buffers terminal;
+                            -- los scratch/resultados de SQL (dbout) quedan "modified" y
+                            -- ahí el force=false falla en silencio (pcall interno de
+                            -- Telescope). Les quitamos 'modified' antes de delegar en la
+                            -- acción normal, así conserva su lógica de reemplazo de buffer.
                             i = {
-                                ["<c-d>"] = actions.delete_buffer,
+                                ["<c-d>"] = require("config.sql").telescope_delete_buffer,
                             },
                             n = {
-                                ["d"] = actions.delete_buffer,
+                                ["d"] = require("config.sql").telescope_delete_buffer,
                             },
                         },
                     },
@@ -1380,6 +1488,7 @@ require("lazy").setup({
                 { "<leader>w",        group = "workspace" },
                 { "<leader>s",        group = "symbols" },
                 { "<leader>l",        group = "lsp" },
+                { "<leader>D",        group = "database" },
 
                 -- Navegación (ya están definidos en la config, solo los documentamos)
                 { "]h",               desc = "Next git hunk" },
@@ -1421,6 +1530,14 @@ require("lazy").setup({
 
                 -- File Explorer con preview (mini.files)
                 { "<leader>e",        desc = "File Explorer (mini.files)" },
+
+                -- dadbod-ui (buffer-local en buffers SQL)
+                { "<leader><CR>",     desc = "Execute statement under cursor",    mode = { "n", "v" } },
+                { "<leader>S",        desc = "Execute query (visual: selección)", mode = { "n", "v" } },
+                { "<leader>W",        desc = "Save query" },
+                { "<leader>E",        desc = "Edit bind parameters" },
+                { "<leader>R",        desc = "Toggle expanded results" },
+                { "<leader>Dd",       desc = "Close SQL buffer" },
             })
         end,
     },
